@@ -14,11 +14,13 @@ var AllConfig AppConfig
 
 // AppConfig type AppConfig
 type AppConfig struct {
-	IsDevelopment bool   `envconfig:"IS_DEVELOPMENT"`
-	Debug         bool   `envconfig:"DEBUG"`
-	Host          string `envconfig:"HOST"`
-	Port          string `envconfig:"APP_PORT"`
-	DB            DBConfig
+	IsDevelopment     bool   `envconfig:"IS_DEVELOPMENT"`
+	Debug             bool   `envconfig:"DEBUG"`
+	Host              string `envconfig:"HOST"`
+	Port              string `envconfig:"APP_PORT"`
+	DB                DBConfig
+	AppDataCSVPath    string `envconfig:"APP_DATA_CSV_PATH"`
+	ReviewDataCSVPath string `envconfig:"REVIEW_DATA_CSV_PATH"`
 }
 
 // GetConfig Collects all configs
