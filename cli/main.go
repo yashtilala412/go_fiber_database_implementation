@@ -10,9 +10,9 @@ import (
 func Init(cfg config.AppConfig, logger *zap.Logger) error {
 	migrationCmd := GetMigrationCommandDef(cfg)
 	apiCmd := GetAPICommandDef(cfg, logger)
+	seedCmd := GetSeedCommandDef(cfg) // Add the seed command
 
 	rootCmd := &cobra.Command{Use: "golang-api"}
-	rootCmd.AddCommand(&migrationCmd)
-	rootCmd.AddCommand(&apiCmd)
+	rootCmd.AddCommand(&migrationCmd, &apiCmd, &seedCmd)
 	return rootCmd.Execute()
 }
