@@ -116,3 +116,19 @@ func (model *AppModel) InsertAppData(app App) (App, error) {
 	}
 	return insertedApp, nil // Return the full record.
 }
+func (model *AppModel) DeleteByID(id int) error {
+	result, err := model.db.Delete(AppTable).Where(goqu.Ex{
+		"app_id": id,
+	}).Executor().Exec()
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Return a specific error for "not found"
+	}
+	return nil
+}
