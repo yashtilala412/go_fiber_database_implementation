@@ -2,57 +2,59 @@ package routes
 
 import (
 	"fmt"
-	"sync"
 
+	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/constants"
+	controllers "git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/controllers/api/v1"
+	"github.com/doug-martin/goqu/v9"
+	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/config"
-
-	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/middlewares"
+	// Adjust the import path if necessary
 	pMetrics "git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/pkg/prometheus"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-var mu sync.Mutex
-
-// Setup initializes routes for the application
-func Setup(app *fiber.App, logger *zap.Logger, config config.AppConfig, pMetrics *pMetrics.PrometheusMetrics) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	app.Use(middlewares.LogHandler(logger, pMetrics))
-
+// Setup function to include App routes
+func Setup(app *fiber.App, goqu *goqu.Database, logger *zap.Logger, pMetrics *pMetrics.PrometheusMetrics) error { // Added pMetrics
 	router := app.Group("/api")
 	v1 := router.Group("/v1")
 
-	fmt.Print(v1)
-
-	// API Endpoints
-	// SetupAppRoutes(v1, logger, config)
-	// SetupReviewRoutes(v1, logger, config)
-
+	// Setup other routes...
+	err := setupAppController(v1, goqu, logger, pMetrics) // Pass pMetrics
+	if err != nil {
+		return err
+	}
+	// Setup Review routes
+	err = setupReviewController(v1, goqu, logger, pMetrics)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-// SetupAppRoutes defines the routes for app management
-// func SetupAppRoutes(v1 fiber.Router, logger *zap.Logger, config config.AppConfig) {
-// 	appController := controller.NewAppController(logger, config)
+func setupAppController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Logger, pMetrics *pMetrics.PrometheusMetrics) error { // Added pMetrics
+	appController, err := controllers.NewAppController(goqu, logger)
+	if err != nil {
+		return err
+	}
 
-// 	appGroup := v1.Group("/apps")
-// 	appGroup.Get("/", appController.ListApps) // Fetch apps with limit, page, and price filter
-// 	appGroup.Post("/", appController.AddApp)  // Add a new app
-// 	appGroup.Delete(fmt.Sprintf("/:%s", constants.ParamAppName), appController.DeleteApp)
+	appRouter := v1.Group("/apps") // Define the /apps route group
 
-// }
+	// Define the specific routes within the /apps group
+	appRouter.Get(fmt.Sprintf("/:%s", constants.ParamAppID), appController.GetApp) // GET /api/v1/apps/:appId
+	appRouter.Get("/", appController.GetApps)                                      // GET /api/v1/apps/
 
-// SetupreviewRoutes defines the routes for app management
-// func SetupReviewRoutes(v1 fiber.Router, logger *zap.Logger, config config.AppConfig) {
+	return nil
+}
+func setupReviewController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Logger, pMetrics *pMetrics.PrometheusMetrics) error {
+	reviewController, err := controllers.NewReviewController(goqu, logger)
+	if err != nil {
+		return err
+	}
 
-// 	reviewController := controller.NewReviewController(logger, config)
+	reviewRouter := v1.Group("/reviews")
 
-// 	reviewGroup := v1.Group("/review")
-// 	reviewGroup.Get("/", reviewController.ListReviews) // Fetch reviews with filters
-// 	reviewGroup.Post("/", reviewController.AddReview)  //add review with given data
-// 	reviewGroup.Delete(fmt.Sprintf("/:%s", constants.ParamAppName), reviewController.DeleteReview)
-// }
+	reviewRouter.Get(fmt.Sprintf("/:%s", constants.ParamReviewID), reviewController.GetReview) // GET /api/v1/reviews/:id
+	reviewRouter.Get("/", reviewController.GetReviews)
+
+	return nil
+}

@@ -47,3 +47,6 @@ swagger
 
 # coverage file
 coverage.out
+
+#folder
+csvdata/

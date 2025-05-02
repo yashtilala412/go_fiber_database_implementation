@@ -8,13 +8,12 @@ import (
 	"go.uber.org/zap"
 
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/config"
-	_ "git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/docs"
-	pMetrics "git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/pkg/prometheus"
+	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/database"
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/routes"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/swagger"
-
 	"github.com/spf13/cobra"
+
+	pMetrics "git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/pkg/prometheus"
 )
 
 // GetAPICommandDef runs app
@@ -27,12 +26,17 @@ func GetAPICommandDef(cfg config.AppConfig, logger *zap.Logger) cobra.Command {
 
 			// Create fiber app
 			app := fiber.New(fiber.Config{})
-			app.Get("/swagger/*", swagger.HandlerDefault) // Serve Swagger UI
 
 			promMetrics := pMetrics.InitPrometheusMetrics()
 
+			// Database connection
+			db, err := database.Connect(cfg.DB)
+			if err != nil {
+				return err
+			}
+
 			// Setup routes
-			err := routes.Setup(app, logger, cfg, promMetrics)
+			err = routes.Setup(app, db, logger, promMetrics)
 			if err != nil {
 				return err
 			}
