@@ -2,6 +2,7 @@ package v1
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -9,6 +10,7 @@ import (
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/models"
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/utils"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
@@ -69,4 +71,36 @@ func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusInternalServerError, constants.FailedToGetReview)
 	}
 	return utils.JSONSuccess(c, http.StatusOK, review)
+}
+func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
+	var reviewReq models.Review
+
+	err := json.Unmarshal(c.Body(), &reviewReq)
+	if err != nil {
+		rc.logger.Error("Error unmarshalling request body", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
+	}
+
+	validate := validator.New()
+	err = validate.Struct(reviewReq)
+	if err != nil {
+		rc.logger.Error("Validation error", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err))
+	}
+
+	reviewToInsert := models.Review{
+		App:                   reviewReq.App,
+		TranslatedReview:      reviewReq.TranslatedReview,
+		Sentiment:             reviewReq.Sentiment,
+		SentimentPolarity:     reviewReq.SentimentPolarity,
+		SentimentSubjectivity: reviewReq.SentimentSubjectivity,
+	}
+
+	insertedReview, err := rc.reviewService.InsertReviewData(reviewToInsert)
+	if err != nil {
+		rc.logger.Error("Error inserting review data", zap.Error(err))
+		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFiledToCreateReviewApp)
+	}
+
+	return utils.JSONSuccess(c, http.StatusCreated, insertedReview)
 }
