@@ -79,7 +79,7 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	err := json.Unmarshal(c.Body(), &appReq)
 	if err != nil {
 		ac.logger.Error("Error unmarshalling request body", zap.Error(err))
-		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
+		return utils.JSONError(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
 	// Validate the request body.
@@ -94,7 +94,7 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	insertedApp, err := ac.appService.InsertAppData(appReq)
 	if err != nil {
 		ac.logger.Error("Error inserting app data", zap.Error(err))
-		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFiledToCreateApp) //Use a constant
+		return utils.JSONError(c, http.StatusInternalServerError, "Failed to create app data: "+err.Error()) //Use a constant
 	}
 
 	return utils.JSONSuccess(c, http.StatusCreated, insertedApp)

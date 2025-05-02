@@ -66,3 +66,34 @@ func (model *ReviewModel) GetById(id int) (Review, error) {
 
 	return review, nil
 }
+func (model *ReviewModel) InsertReviewData(review Review) (Review, error) {
+	_, err := model.db.Insert(ReviewTable).Rows(goqu.Record{
+		"app":                    review.App,
+		"translated_review":      review.TranslatedReview,
+		"sentiment":              review.Sentiment,
+		"sentiment_polarity":     review.SentimentPolarity,
+		"sentiment_subjectivity": review.SentimentSubjectivity,
+	}).Executor().Exec()
+	if err != nil {
+		return review, err
+	}
+
+	// Retrieve the inserted review to get the generated ID.
+	var insertedReview Review
+	found, err := model.db.From(ReviewTable).
+		Where(goqu.Ex{
+			"app":               review.App,
+			"translated_review": review.TranslatedReview,
+			// Add other unique fields if necessary to ensure correct retrieval
+		}).
+		ScanStruct(&insertedReview)
+
+	if err != nil {
+		return review, err
+	}
+
+	if !found {
+		return review, sql.ErrNoRows // Or a custom error
+	}
+	return insertedReview, nil
+}

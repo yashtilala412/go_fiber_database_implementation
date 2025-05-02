@@ -41,6 +41,7 @@ const (
 	FailedToGetReviews   = "Failed to get reviews"
 )
 const (
-	ErrorInvalidRequestBody = "Invalid request body"
-	ErrorFiledToCreateApp   = "Failed to create app data: "
+	ErrorInvalidRequestBody     = "Invalid request body"
+	ErrorFiledToCreateApp       = "Failed to create app data: "
+	ErrorFiledToCreateReviewApp = "Failed to create review data: "
 )
