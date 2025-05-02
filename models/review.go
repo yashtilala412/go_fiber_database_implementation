@@ -97,3 +97,19 @@ func (model *ReviewModel) InsertReviewData(review Review) (Review, error) {
 	}
 	return insertedReview, nil
 }
+func (model *ReviewModel) DeleteByID(id int) error {
+	result, err := model.db.Delete(ReviewTable).Where(goqu.Ex{
+		"review_id": id,
+	}).Executor().Exec()
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows // Return a specific error for "not found"
+	}
+	return nil
+}
