@@ -99,3 +99,22 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusCreated, insertedApp)
 }
+func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params(constants.ParamAppID))
+	if err != nil {
+		ac.logger.Error("Error parsing app ID", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, "Invalid app ID")
+	}
+
+	err = ac.appService.DeleteByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ac.logger.Warn("App not found", zap.Int("id", id))
+			return utils.JSONError(c, http.StatusNotFound, "App not found")
+		}
+		ac.logger.Error("Error deleting app", zap.Error(err), zap.Int("id", id))
+		return utils.JSONError(c, http.StatusInternalServerError, "Failed to delete app")
+	}
+
+	return utils.JSONSuccess(c, http.StatusOK, map[string]string{"message": "App deleted successfully"})
+}

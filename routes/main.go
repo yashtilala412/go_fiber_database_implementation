@@ -43,6 +43,7 @@ func setupAppController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Logger
 	appRouter.Get(fmt.Sprintf("/:%s", constants.ParamAppID), appController.GetApp) // GET /api/v1/apps/:appId
 	appRouter.Get("/", appController.GetApps)
 	appRouter.Post("/", appController.CreateAppData) // GET /api/v1/apps/
+	appRouter.Delete(fmt.Sprintf("/:%s", constants.ParamAppID), appController.DeleteApp)
 
 	return nil
 }
