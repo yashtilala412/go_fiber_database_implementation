@@ -2,6 +2,7 @@ package v1
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -9,6 +10,7 @@ import (
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/models"
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/utils"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 
 	"github.com/gofiber/fiber/v2"
@@ -69,4 +71,31 @@ func (ac *AppController) GetApps(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusInternalServerError, constants.FailedToGetApp)
 	}
 	return utils.JSONSuccess(c, http.StatusOK, apps)
+}
+func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
+	var appReq models.App // Use the App struct from your models
+
+	// Parse the request body into the App struct.
+	err := json.Unmarshal(c.Body(), &appReq)
+	if err != nil {
+		ac.logger.Error("Error unmarshalling request body", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+	}
+
+	// Validate the request body.
+	validate := validator.New()
+	err = validate.Struct(appReq)
+	if err != nil {
+		ac.logger.Error("Validation error", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
+	}
+
+	// Insert the app data into the database.
+	insertedApp, err := ac.appService.InsertAppData(appReq)
+	if err != nil {
+		ac.logger.Error("Error inserting app data", zap.Error(err))
+		return utils.JSONError(c, http.StatusInternalServerError, "Failed to create app data: "+err.Error()) //Use a constant
+	}
+
+	return utils.JSONSuccess(c, http.StatusCreated, insertedApp)
 }

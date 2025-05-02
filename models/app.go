@@ -74,3 +74,45 @@ func (model *AppModel) GetById(id int) (App, error) {
 
 	return app, nil
 }
+
+// InsertAppData inserts a new app into the database.
+func (model *AppModel) InsertAppData(app App) (App, error) {
+	// app.AppID = xid.New().String()  // app_id is SERIAL, so the DB will generate it.
+
+	_, err := model.db.Insert(AppTable).Rows(goqu.Record{
+		"app":            app.App,
+		"category":       app.Category,
+		"rating":         app.Rating,
+		"reviews":        app.Reviews,
+		"size":           app.Size,
+		"installs":       app.Installs,
+		"type":           app.Type,
+		"price":          app.Price,
+		"Content Rating": app.ContentRating,
+		"genres":         app.Genres,
+		"Last Updated":   app.LastUpdated,
+		"Current Ver":    app.CurrentVer,
+		"Android Ver":    app.AndroidVer, // Corrected column name
+	}).Executor().Exec()
+	if err != nil {
+		return app, err
+	}
+
+	//  we should query the database to get the complete record, including the generated app_id.
+	var insertedApp App
+	found, err := model.db.From(AppTable).
+		Where(goqu.Ex{ // Assuming other fields are unique enough to identify the inserted row.
+			"app":      app.App,
+			"category": app.Category,
+			// Add other fields to uniquely identify the record.
+		}).
+		ScanStruct(&insertedApp)
+
+	if err != nil {
+		return app, err
+	}
+	if !found {
+		return app, sql.ErrNoRows // Or some other error to indicate that the record was not found.
+	}
+	return insertedApp, nil // Return the full record.
+}
