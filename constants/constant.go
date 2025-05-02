@@ -45,3 +45,11 @@ const (
 	ErrorFiledToCreateApp       = "Failed to create app data: "
 	ErrorFiledToCreateReviewApp = "Failed to create review data: "
 )
+const (
+	ErrorFaiedToDeleteReview = "Failed to delete review"
+	ErrorFaiedToDeleteApp    = "Failed to delete app"
+)
+const (
+	ReviewsDeletedSuccessfully = "Review deleted successfully"
+	AppsDeletedSuccessfully    = "Apps deleted successfully"
+)

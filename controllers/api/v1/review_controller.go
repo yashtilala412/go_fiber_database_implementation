@@ -104,3 +104,22 @@ func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusCreated, insertedReview)
 }
+func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
+	if err != nil {
+		rc.logger.Error("Error parsing review ID", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidReviewID)
+	}
+
+	err = rc.reviewService.DeleteByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			rc.logger.Warn("Review not found", zap.Int("id", id))
+			return utils.JSONError(c, http.StatusNotFound, constants.ErrorReviewNotFound)
+		}
+		rc.logger.Error("Error deleting review", zap.Error(err), zap.Int("id", id))
+		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFaiedToDeleteReview)
+	}
+
+	return utils.JSONSuccess(c, http.StatusOK, constants.ReviewsDeletedSuccessfully)
+}
