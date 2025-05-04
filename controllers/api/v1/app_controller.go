@@ -118,3 +118,28 @@ func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusOK, constants.AppsDeletedSuccessfully)
 }
+func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params(constants.ParamAppID))
+	if err != nil {
+		ac.logger.Error("Error parsing app ID", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidAppID)
+	}
+
+	var updatedApp models.App
+	if err := c.BodyParser(&updatedApp); err != nil {
+		ac.logger.Error("Error parsing request body", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
+	}
+
+	updatedApp, err = ac.appService.UpdateByID(id, updatedApp)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ac.logger.Warn("App not found", zap.Int("id", id))
+			return utils.JSONError(c, http.StatusNotFound, constants.ErrorAppNotFound)
+		}
+		ac.logger.Error("Error updating app", zap.Error(err), zap.Int("id", id))
+		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFiledToUpdateApp)
+	}
+
+	return utils.JSONSuccess(c, http.StatusOK, updatedApp)
+}

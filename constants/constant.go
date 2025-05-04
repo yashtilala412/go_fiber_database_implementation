@@ -10,12 +10,13 @@ const (
 
 // Error Messages
 const (
-	ErrorInvalidLimit  = "Invalid limit value"
-	ErrorInvalidOffset = "Invalid page value or offset value"
-	ErrorInvalidAppID  = "Invalid App ID"
-	ErrorAppNotFound   = "App Not Found"
-	ErrorLoadingCache  = "Error loading app data into cache"
-	FailedToGetApp     = "Failed To get app"
+	ErrorInvalidLimit     = "Invalid limit value"
+	ErrorInvalidOffset    = "Invalid page value or offset value"
+	ErrorInvalidAppID     = "Invalid App ID"
+	ErrorAppNotFound      = "App Not Found"
+	ErrorLoadingCache     = "Error loading app data into cache"
+	FailedToGetApp        = "Failed To get app"
+	ErrorFiledToUpdateApp = "Failed to update app data: "
 )
 
 const (

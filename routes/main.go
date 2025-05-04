@@ -44,7 +44,7 @@ func setupAppController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Logger
 	appRouter.Get("/", appController.GetApps)
 	appRouter.Post("/", appController.CreateAppData) // GET /api/v1/apps/
 	appRouter.Delete(fmt.Sprintf("/:%s", constants.ParamAppID), appController.DeleteApp)
-
+	appRouter.Put(fmt.Sprintf("/:%s", constants.ParamAppID), appController.UpdateApp)
 	return nil
 }
 func setupReviewController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Logger, pMetrics *pMetrics.PrometheusMetrics) error {

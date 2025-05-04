@@ -132,3 +132,61 @@ func (model *AppModel) DeleteByID(id int) error {
 	}
 	return nil
 }
+
+// UpdateByID updates an existing app by its ID.
+func (model *AppModel) UpdateByID(id int, app App) (App, error) {
+	//  Use a transaction to ensure data consistency.
+	tx, err := model.db.Begin()
+	if err != nil {
+		return App{}, err
+	}
+	defer tx.Rollback() // Rollback if any error occurs
+
+	// Update the record.
+	result, err := tx.Update(AppTable).Set(goqu.Record{
+		"app":            app.App,
+		"category":       app.Category,
+		"rating":         app.Rating,
+		"reviews":        app.Reviews,
+		"size":           app.Size,
+		"installs":       app.Installs,
+		"type":           app.Type,
+		"price":          app.Price,
+		"Content Rating": app.ContentRating,
+		"genres":         app.Genres,
+		"Last Updated":   app.LastUpdated,
+		"Current Ver":    app.CurrentVer,
+		"Android Ver":    app.AndroidVer,
+	}).Where(goqu.Ex{
+		"app_id": id,
+	}).Executor().Exec()
+	if err != nil {
+		return App{}, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return App{}, err
+	}
+	if rowsAffected == 0 {
+		return App{}, sql.ErrNoRows // Return error if no rows were updated
+	}
+
+	// Retrieve the updated record to return it.
+	updatedApp := App{}
+	found, err := tx.From(AppTable).Where(goqu.Ex{
+		"app_id": id,
+	}).ScanStruct(&updatedApp)
+	if err != nil {
+		return App{}, err
+	}
+	if !found {
+		return App{}, sql.ErrNoRows //Should not happen, but handle it.
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		return App{}, err
+	}
+	return updatedApp, nil
+}
