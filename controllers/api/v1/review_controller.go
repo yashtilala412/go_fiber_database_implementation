@@ -123,3 +123,28 @@ func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusOK, constants.ReviewsDeletedSuccessfully)
 }
+func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
+	if err != nil {
+		rc.logger.Error("Error parsing review ID", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidReviewID)
+	}
+
+	var updatedReview models.Review
+	if err := c.BodyParser(&updatedReview); err != nil {
+		rc.logger.Error("Error parsing request body", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
+	}
+
+	updatedReview, err = rc.reviewService.UpdateByID(id, updatedReview)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			rc.logger.Warn("Review not found", zap.Int("id", id))
+			return utils.JSONError(c, http.StatusNotFound, constants.ErrorReviewNotFound)
+		}
+		rc.logger.Error("Error updating review", zap.Error(err), zap.Int("id", id))
+		return utils.JSONError(c, http.StatusInternalServerError, constants.FailedToUpdateReviews)
+	}
+
+	return utils.JSONSuccess(c, http.StatusOK, updatedReview)
+}

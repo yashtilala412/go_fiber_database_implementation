@@ -113,3 +113,51 @@ func (model *ReviewModel) DeleteByID(id int) error {
 	}
 	return nil
 }
+func (model *ReviewModel) UpdateByID(id int, review Review) (Review, error) {
+	//  Use a transaction to ensure data consistency.
+	tx, err := model.db.Begin()
+	if err != nil {
+		return Review{}, err
+	}
+	defer tx.Rollback() // Rollback if any error occurs
+
+	// Update the record.
+	result, err := tx.Update(ReviewTable).Set(goqu.Record{
+		"app":                    review.App,
+		"translated_review":      review.TranslatedReview,
+		"sentiment":              review.Sentiment,
+		"sentiment_polarity":     review.SentimentPolarity,
+		"sentiment_subjectivity": review.SentimentSubjectivity,
+	}).Where(goqu.Ex{
+		"review_id": id,
+	}).Executor().Exec()
+	if err != nil {
+		return Review{}, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return Review{}, err
+	}
+	if rowsAffected == 0 {
+		return Review{}, sql.ErrNoRows // Return error if no rows were updated
+	}
+
+	// Retrieve the updated record to return it.
+	updatedReview := Review{}
+	found, err := tx.From(ReviewTable).Where(goqu.Ex{
+		"review_id": id,
+	}).ScanStruct(&updatedReview)
+	if err != nil {
+		return Review{}, err
+	}
+	if !found {
+		return Review{}, sql.ErrNoRows //Should not happen, but handle it.
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		return Review{}, err
+	}
+	return updatedReview, nil
+}
