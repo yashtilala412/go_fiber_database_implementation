@@ -36,10 +36,11 @@ const (
 )
 const (
 	// Error codes for reviews
-	ErrorInvalidReviewID = "Invalid Review ID"
-	ErrorReviewNotFound  = "Review not found"
-	FailedToGetReview    = "Failed to get review"
-	FailedToGetReviews   = "Failed to get reviews"
+	ErrorInvalidReviewID  = "Invalid Review ID"
+	ErrorReviewNotFound   = "Review not found"
+	FailedToGetReview     = "Failed to get review"
+	FailedToGetReviews    = "Failed to get reviews"
+	FailedToUpdateReviews = "Failed to update review"
 )
 const (
 	ErrorInvalidRequestBody     = "Invalid request body"

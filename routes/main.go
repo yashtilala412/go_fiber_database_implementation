@@ -59,6 +59,7 @@ func setupReviewController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Log
 	reviewRouter.Get("/", reviewController.GetReviews)
 	reviewRouter.Post("/", reviewController.CreateReviewData)
 	reviewRouter.Delete(fmt.Sprintf("/:%s", constants.ParamReviewID), reviewController.DeleteReview)
+	reviewRouter.Put(fmt.Sprintf("/:%s", constants.ParamReviewID), reviewController.UpdateReview)
 
 	return nil
 }
