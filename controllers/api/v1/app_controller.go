@@ -79,7 +79,7 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	err := json.Unmarshal(c.Body(), &appReq)
 	if err != nil {
 		ac.logger.Error("Error unmarshalling request body", zap.Error(err))
-		return utils.JSONError(c, http.StatusBadRequest, "Invalid request body: "+err.Error())
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody+err.Error())
 	}
 
 	// Validate the request body.
@@ -87,18 +87,21 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	err = validate.Struct(appReq)
 	if err != nil {
 		ac.logger.Error("Validation error", zap.Error(err))
-		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
+		validationErrors := utils.ValidatorErrorString(err)
+		return utils.JSONError(c, http.StatusBadRequest, validationErrors) //  Adapt this as needed.  Send the validation errors.
 	}
 
 	// Insert the app data into the database.
 	insertedApp, err := ac.appService.InsertAppData(appReq)
 	if err != nil {
 		ac.logger.Error("Error inserting app data", zap.Error(err))
-		return utils.JSONError(c, http.StatusInternalServerError, "Failed to create app data: "+err.Error()) //Use a constant
+		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFiledToCreateApp) //Use a constant
 	}
 
+	// Return the newly created app data, including the generated ID.
 	return utils.JSONSuccess(c, http.StatusCreated, insertedApp)
 }
+
 func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamAppID))
 	if err != nil {
@@ -129,6 +132,14 @@ func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
 	if err := c.BodyParser(&updatedApp); err != nil {
 		ac.logger.Error("Error parsing request body", zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
+	}
+
+	// Validate the request body.
+	validate := validator.New()
+	err = validate.Struct(updatedApp)
+	if err != nil {
+		ac.logger.Error("Validation error", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
 	}
 
 	updatedApp, err = ac.appService.UpdateByID(id, updatedApp)

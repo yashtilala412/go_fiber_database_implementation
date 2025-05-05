@@ -131,9 +131,17 @@ func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
 	}
 
 	var updatedReview models.Review
-	if err := c.BodyParser(&updatedReview); err != nil {
+	if err := json.Unmarshal(c.Body(), &updatedReview); err != nil {
 		rc.logger.Error("Error parsing request body", zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
+	}
+
+	// Validate the request body.
+	validate := validator.New()
+	err = validate.Struct(updatedReview)
+	if err != nil {
+		rc.logger.Error("Validation error", zap.Error(err))
+		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
 	}
 
 	updatedReview, err = rc.reviewService.UpdateByID(id, updatedReview)
