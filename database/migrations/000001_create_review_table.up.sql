@@ -2,9 +2,9 @@
 
 CREATE TABLE review_data (
     review_id SERIAL PRIMARY KEY,
-    App TEXT NOT NULL,
-    Translated_Review TEXT NOT NULL,
-    Sentiment TEXT NOT NULL,
-    Sentiment_Polarity REAL,        
-    Sentiment_Subjectivity REAL     
+    app TEXT NOT NULL,
+    translated_review TEXT NOT NULL,
+    sentiment TEXT NOT NULL,
+    sentiment_polarity REAL,        
+    sentiment_subjectivity REAL     
 );

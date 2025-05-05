@@ -23,6 +23,7 @@ func SeedData(cfg config.AppConfig, db *goqu.Database) error {
 
 	return nil
 }
+
 func seedAppData(csvPath string, db *goqu.Database) error {
 	file, err := os.Open(csvPath)
 	if err != nil {
@@ -86,11 +87,11 @@ func seedAppData(csvPath string, db *goqu.Database) error {
 			"installs":       row[5],
 			"type":           row[6],
 			"price":          row[7],
-			"Content Rating": row[8],
+			"content_rating": row[8], // Changed to snake case
 			"genres":         row[9],
-			"Last Updated":   row[10],
-			"Current Ver":    row[11],
-			"Android Ver":    row[12],
+			"last_updated":   row[10], // Changed to snake case
+			"current_ver":    row[11], // Changed to snake case
+			"android_ver":    row[12], // Changed to snake case
 		}
 		appData = append(appData, data)
 		fmt.Printf("Debug: Inserting row at line %d: %+v\n", lineNum, data) // Debug log
@@ -170,10 +171,10 @@ func seedReviewData(csvPath string, db *goqu.Database) error {
 
 		data := map[string]interface{}{
 			"app":                    handleString(row[0]),
-			"translated_review":      handleString(row[1]),
+			"translated_review":      handleString(row[1]), // Changed to snake case
 			"sentiment":              handleString(row[2]),
-			"sentiment_polarity":     sentimentPolarity,
-			"sentiment_subjectivity": sentimentSubjectivity,
+			"sentiment_polarity":     sentimentPolarity,     // Changed to snake case
+			"sentiment_subjectivity": sentimentSubjectivity, // Changed to snake case
 		}
 		reviewData = append(reviewData, data)
 		fmt.Printf("Debug: Inserting review row at line %d: %v\n", lineNum, data) // Log the data
