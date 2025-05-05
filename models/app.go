@@ -11,20 +11,20 @@ const AppTable = "app_data"
 
 // App model
 type App struct {
-	AppID         int     `json:"app_id" db:"app_id"`
+	AppId         int     `json:"app_id" db:"app_id"`
 	App           string  `json:"app" db:"app" validate:"required"`
 	Category      string  `json:"category" db:"category" validate:"required"`
-	Rating        float64 `json:"rating" db:"rating"`
-	Reviews       int     `json:"reviews" db:"reviews"`
-	Size          string  `json:"size" db:"size"`
-	Installs      string  `json:"installs" db:"installs"`
-	Type          string  `json:"type" db:"type"`
-	Price         string  `json:"price" db:"price"`
-	ContentRating string  `json:"content_rating" db:"content_rating"` // Changed to snake case
-	Genres        string  `json:"genres" db:"genres"`
-	LastUpdated   string  `json:"last_updated" db:"last_updated"` // Changed to snake case
-	CurrentVer    string  `json:"current_ver" db:"current_ver"`   // Changed to snake case
-	AndroidVer    string  `json:"android_ver" db:"android_ver"`   // Changed to snake case
+	Rating        float64 `json:"rating" db:"rating" validate:"required"`
+	Reviews       int     `json:"reviews" db:"reviews" validate:"required"`
+	Size          string  `json:"size" db:"size" validate:"required"`
+	Installs      string  `json:"installs" db:"installs" validate:"required"`
+	Type          string  `json:"type" db:"type" validate:"required"`
+	Price         string  `json:"price" db:"price" validate:"required"`
+	ContentRating string  `json:"content_rating" db:"content_rating" validate:"required"`
+	Genres        string  `json:"genres" db:"genres" validate:"required"`
+	LastUpdated   string  `json:"last_updated" db:"last_updated" validate:"required"`
+	CurrentVer    string  `json:"current_ver" db:"current_ver" validate:"required"`
+	AndroidVer    string  `json:"android_ver" db:"android_ver" validate:"required"`
 }
 
 // AppModel implements app related database operations
