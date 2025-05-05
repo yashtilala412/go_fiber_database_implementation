@@ -20,11 +20,11 @@ type App struct {
 	Installs      string  `json:"installs" db:"installs"`
 	Type          string  `json:"type" db:"type"`
 	Price         string  `json:"price" db:"price"`
-	ContentRating string  `json:"content_rating" db:"Content Rating"`
+	ContentRating string  `json:"content_rating" db:"content_rating"` // Changed to snake case
 	Genres        string  `json:"genres" db:"genres"`
-	LastUpdated   string  `json:"last_updated" db:"Last Updated"`
-	CurrentVer    string  `json:"current_ver" db:"Current Ver"`
-	AndroidVer    string  `json:"android_ver" db:"Android Ver"`
+	LastUpdated   string  `json:"last_updated" db:"last_updated"` // Changed to snake case
+	CurrentVer    string  `json:"current_ver" db:"current_ver"`   // Changed to snake case
+	AndroidVer    string  `json:"android_ver" db:"android_ver"`   // Changed to snake case
 }
 
 // AppModel implements app related database operations
@@ -77,8 +77,6 @@ func (model *AppModel) GetById(id int) (App, error) {
 
 // InsertAppData inserts a new app into the database.
 func (model *AppModel) InsertAppData(app App) (App, error) {
-	// app.AppID = xid.New().String()  // app_id is SERIAL, so the DB will generate it.
-
 	_, err := model.db.Insert(AppTable).Rows(goqu.Record{
 		"app":            app.App,
 		"category":       app.Category,
@@ -88,11 +86,11 @@ func (model *AppModel) InsertAppData(app App) (App, error) {
 		"installs":       app.Installs,
 		"type":           app.Type,
 		"price":          app.Price,
-		"Content Rating": app.ContentRating,
+		"content_rating": app.ContentRating, // Changed to snake case
 		"genres":         app.Genres,
-		"Last Updated":   app.LastUpdated,
-		"Current Ver":    app.CurrentVer,
-		"Android Ver":    app.AndroidVer, // Corrected column name
+		"last_updated":   app.LastUpdated, // Changed to snake case
+		"current_ver":    app.CurrentVer,  // Changed to snake case
+		"android_ver":    app.AndroidVer,  // Changed to snake case
 	}).Executor().Exec()
 	if err != nil {
 		return app, err
@@ -152,11 +150,11 @@ func (model *AppModel) UpdateByID(id int, app App) (App, error) {
 		"installs":       app.Installs,
 		"type":           app.Type,
 		"price":          app.Price,
-		"Content Rating": app.ContentRating,
+		"content_rating": app.ContentRating, // Changed to snake case
 		"genres":         app.Genres,
-		"Last Updated":   app.LastUpdated,
-		"Current Ver":    app.CurrentVer,
-		"Android Ver":    app.AndroidVer,
+		"last_updated":   app.LastUpdated, // Changed to snake case
+		"current_ver":    app.CurrentVer,  // Changed to snake case
+		"android_ver":    app.AndroidVer,  // Changed to snake case
 	}).Where(goqu.Ex{
 		"app_id": id,
 	}).Executor().Exec()
