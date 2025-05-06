@@ -1,0 +1,353 @@
+definitions:
+  models.App:
+    properties:
+      android_ver:
+        type: string
+      app:
+        type: string
+      category:
+        type: string
+      content_rating:
+        type: string
+      current_ver:
+        type: string
+      genres:
+        type: string
+      id:
+        type: integer
+      installs:
+        type: string
+      last_updated:
+        type: string
+      price:
+        type: string
+      rating:
+        type: number
+      reviews:
+        type: integer
+      size:
+        type: string
+      type:
+        type: string
+    required:
+    - android_ver
+    - app
+    - category
+    - content_rating
+    - current_ver
+    - genres
+    - installs
+    - last_updated
+    - price
+    - rating
+    - reviews
+    - size
+    - type
+    type: object
+  models.Review:
+    properties:
+      app:
+        type: string
+      id:
+        type: integer
+      sentiment:
+        type: string
+      sentiment_polarity:
+        type: number
+      sentiment_subjectivity:
+        type: number
+      translated_review:
+        type: string
+    required:
+    - app
+    - sentiment
+    - translated_review
+    type: object
+  utils.JSONResponse:
+    properties:
+      data: {}
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /reviews:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new review data entry in the database.
+      parameters:
+      - description: Review data to create
+        in: body
+        name: review
+        required: true
+        schema:
+          $ref: '#/definitions/models.Review'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Create Review Data
+      tags:
+      - Reviews
+  /reviews/{reviewid}:
+    delete:
+      description: Deletes a review from the database.
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Delete Review by ID
+      tags:
+      - Reviews
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing review in the database.
+      parameters:
+      - description: Review ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated review data
+        in: body
+        name: review
+        required: true
+        schema:
+          $ref: '#/definitions/models.Review'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Update Review
+      tags:
+      - Reviews
+  /v1/apps:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new app data entry in the database.
+      parameters:
+      - description: App data to create
+        in: body
+        name: app
+        required: true
+        schema:
+          $ref: '#/definitions/models.App'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.App'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Create App Data
+      tags:
+      - Apps
+  /v1/apps/{appid}:
+    delete:
+      description: Deletes a single app from the database by its ID.
+      parameters:
+      - description: App ID
+        in: path
+        name: appid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Delete App by ID
+      tags:
+      - Apps
+    get:
+      description: Retrieves a single app from the database.
+      parameters:
+      - description: App ID
+        in: path
+        name: appid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.App'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Get App by ID
+      tags:
+      - Apps
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing app in the database.
+      parameters:
+      - description: App ID
+        in: path
+        name: appid
+        required: true
+        type: integer
+      - description: Updated app data
+        in: body
+        name: app
+        required: true
+        schema:
+          $ref: '#/definitions/models.App'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.App'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Update App
+      tags:
+      - Apps
+  /v1/reviews:
+    get:
+      description: Retrieves a list of all reviews from the database.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Review'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Get All Reviews
+      tags:
+      - Reviews
+  /v1/reviews/{reviewid}:
+    get:
+      description: Retrieves a single review from the database.
+      parameters:
+      - description: Review ID
+        in: path
+        name: reviewid
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Review'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.JSONResponse'
+      summary: Get Review by ID
+      tags:
+      - Reviews
+swagger: "2.0"
