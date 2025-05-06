@@ -14,11 +14,11 @@ import (
 // SeedData reads data from CSV files and inserts it into the database.
 func SeedData(cfg config.AppConfig, db *goqu.Database) error {
 	if err := seedAppData(cfg.AppDataCSVPath, db); err != nil {
-		return fmt.Errorf("failed to seed app_data: %w", err)
+		return fmt.Errorf("failed to seed apps: %w", err)
 	}
 
 	if err := seedReviewData(cfg.ReviewDataCSVPath, db); err != nil {
-		return fmt.Errorf("failed to seed review_data: %w", err)
+		return fmt.Errorf("failed to seed reviews: %w", err)
 	}
 
 	return nil
@@ -27,21 +27,21 @@ func SeedData(cfg config.AppConfig, db *goqu.Database) error {
 func seedAppData(csvPath string, db *goqu.Database) error {
 	file, err := os.Open(csvPath)
 	if err != nil {
-		return fmt.Errorf("failed to open app_data CSV file: %w", err)
+		return fmt.Errorf("failed to open apps CSV file: %w", err)
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	_, err = reader.Read() // Read the header row and discard it
 	if err != nil {
-		return fmt.Errorf("failed to read app_data CSV header: %w", err)
+		return fmt.Errorf("failed to read apps CSV header: %w", err)
 	}
 
 	expectedFields := 13
 
 	tx, err := db.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction for app_data: %w", err)
+		return fmt.Errorf("failed to begin transaction for apps: %w", err)
 	}
 	defer tx.Rollback() // Rollback on error
 
@@ -52,12 +52,12 @@ func seedAppData(csvPath string, db *goqu.Database) error {
 			if err.Error() == "EOF" {
 				break
 			}
-			fmt.Printf("Warning: Error reading app_data CSV row at line %d: %v\n", lineNum, err)
+			fmt.Printf("Warning: Error reading apps CSV row at line %d: %v\n", lineNum, err)
 			continue // Skip rows with read errors other than EOF
 		}
 
 		if len(row) != expectedFields {
-			fmt.Printf("Warning: Skipping app_data row at line %d with %d fields (expected %d): %v\n", lineNum, len(row), expectedFields, row)
+			fmt.Printf("Warning: Skipping apps row at line %d with %d fields (expected %d): %v\n", lineNum, len(row), expectedFields, row)
 			continue // Skip the current row if the number of fields is wrong
 		}
 
@@ -97,9 +97,9 @@ func seedAppData(csvPath string, db *goqu.Database) error {
 		fmt.Printf("Debug: Inserting row at line %d: %+v\n", lineNum, data) // Debug log
 	}
 
-	_, err = tx.Insert("app_data").Rows(appData).Executor().Exec()
+	_, err = tx.Insert("apps").Rows(appData).Executor().Exec()
 	if err != nil {
-		return fmt.Errorf("failed to insert app_data: %w", err)
+		return fmt.Errorf("failed to insert apps: %w", err)
 	}
 
 	return tx.Commit()
@@ -108,21 +108,21 @@ func seedAppData(csvPath string, db *goqu.Database) error {
 func seedReviewData(csvPath string, db *goqu.Database) error {
 	file, err := os.Open(csvPath)
 	if err != nil {
-		return fmt.Errorf("failed to open review_data CSV file: %w", err)
+		return fmt.Errorf("failed to open reviews CSV file: %w", err)
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
 	_, err = reader.Read() // Read the header row
 	if err != nil {
-		return fmt.Errorf("failed to read review_data CSV header: %w", err)
+		return fmt.Errorf("failed to read reviews CSV header: %w", err)
 	}
 
 	expectedFields := 5
 
 	tx, err := db.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction for review_data: %w", err)
+		return fmt.Errorf("failed to begin transaction for reviews: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -133,12 +133,12 @@ func seedReviewData(csvPath string, db *goqu.Database) error {
 			if err.Error() == "EOF" {
 				break
 			}
-			fmt.Printf("Warning: Error reading review_data CSV row at line %d: %v\n", lineNum, err)
+			fmt.Printf("Warning: Error reading reviews CSV row at line %d: %v\n", lineNum, err)
 			continue
 		}
 
 		if len(row) != expectedFields {
-			fmt.Printf("Warning: Skipping review_data row at line %d with %d fields (expected %d): %v\n", lineNum, err, row)
+			fmt.Printf("Warning: Skipping reviews row at line %d with %d fields (expected %d): %v\n", lineNum, err, row)
 			continue
 		}
 
@@ -185,9 +185,9 @@ func seedReviewData(csvPath string, db *goqu.Database) error {
 		fmt.Printf("%+v\n", row)
 	}
 
-	_, err = tx.Insert("review_data").Rows(reviewData).Executor().Exec()
+	_, err = tx.Insert("reviews").Rows(reviewData).Executor().Exec()
 	if err != nil {
-		return fmt.Errorf("failed to insert review_data: %w", err)
+		return fmt.Errorf("failed to insert reviews: %w", err)
 	}
 
 	return tx.Commit()

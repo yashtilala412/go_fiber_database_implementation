@@ -7,11 +7,11 @@ import (
 )
 
 // ReviewTable represent table name
-const ReviewTable = "review_data"
+const ReviewTable = "reviews"
 
 // Review model
 type Review struct {
-	ReviewID              int             `json:"review_id" db:"review_id"`
+	ReviewID              int             `json:"id" db:"id"`
 	App                   string          `json:"app" db:"app" validate:"required"`
 	TranslatedReview      string          `json:"translated_review" db:"translated_review" validate:"required"`
 	Sentiment             string          `json:"sentiment" db:"sentiment" validate:"required"`
@@ -53,7 +53,7 @@ func (model *ReviewModel) GetReviews(limit, offset int) ([]Review, error) {
 func (model *ReviewModel) GetById(id int) (Review, error) {
 	review := Review{}
 	found, err := model.db.From(ReviewTable).Where(goqu.Ex{
-		"review_id": id,
+		"id": id,
 	}).ScanStruct(&review)
 
 	if err != nil {
@@ -103,7 +103,7 @@ func (model *ReviewModel) InsertReviews(review Review) (Review, error) {
 // DeleteApp deletes a review by its ID.
 func (model *ReviewModel) DeleteApp(id int) error {
 	result, err := model.db.Delete(ReviewTable).Where(goqu.Ex{
-		"review_id": id,
+		"id": id,
 	}).Executor().Exec()
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func (model *ReviewModel) UpdateApp(id int, review Review) (Review, error) {
 		"sentiment_polarity":     review.SentimentPolarity,
 		"sentiment_subjectivity": review.SentimentSubjectivity,
 	}).Where(goqu.Ex{
-		"review_id": id,
+		"id": id,
 	}).Executor().Exec()
 	if err != nil {
 		return Review{}, err
@@ -152,7 +152,7 @@ func (model *ReviewModel) UpdateApp(id int, review Review) (Review, error) {
 	// Retrieve the updated record to return it.
 	updatedReview := Review{}
 	found, err := tx.From(ReviewTable).Where(goqu.Ex{
-		"review_id": id,
+		"id": id,
 	}).ScanStruct(&updatedReview)
 	if err != nil {
 		return Review{}, err

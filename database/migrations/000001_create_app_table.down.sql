@@ -1,5 +1,5 @@
 -- +migrate Down
 
-DROP TABLE IF EXISTS app_data;
+DROP TABLE IF EXISTS apps;
 
 
