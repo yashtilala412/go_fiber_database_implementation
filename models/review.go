@@ -11,12 +11,12 @@ const ReviewTable = "reviews"
 
 // Review model
 type Review struct {
-	ReviewID              int             `json:"id" db:"id"`
-	App                   string          `json:"app" db:"app" validate:"required"`
-	TranslatedReview      string          `json:"translated_review" db:"translated_review" validate:"required"`
-	Sentiment             string          `json:"sentiment" db:"sentiment" validate:"required"`
-	SentimentPolarity     sql.NullFloat64 `json:"sentiment_polarity" db:"sentiment_polarity"`
-	SentimentSubjectivity sql.NullFloat64 `json:"sentiment_subjectivity" db:"sentiment_subjectivity"`
+	ReviewID              int      `json:"id" db:"id"`
+	App                   string   `json:"app" db:"app" validate:"required"`
+	TranslatedReview      string   `json:"translated_review" db:"translated_review" validate:"required"`
+	Sentiment             string   `json:"sentiment" db:"sentiment" validate:"required"`
+	SentimentPolarity     *float64 `json:"sentiment_polarity" db:"sentiment_polarity"`
+	SentimentSubjectivity *float64 `json:"sentiment_subjectivity" db:"sentiment_subjectivity"`
 }
 
 // ReviewModel implements review related database operations

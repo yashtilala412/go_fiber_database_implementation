@@ -43,9 +43,9 @@ func NewAppController(goqu *goqu.Database, logger *zap.Logger) (*AppController, 
 //	@Produce		json
 //	@Param		appid	path		int	true	"App ID"
 //	@Success		200	{object}	models.App
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		404	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		404	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/apps/{appid} [get]
 func (ac *AppController) GetApp(c *fiber.Ctx) error {
 	appID, err := c.ParamsInt(constants.ParamAppID) // Use c.ParamsInt
@@ -72,8 +72,8 @@ func (ac *AppController) GetApp(c *fiber.Ctx) error {
 //	@Param		limit	query	int	false	"Maximum number of apps to retrieve"	default(10)
 //	@Param		offset	query	int	false	"Starting position for retrieving apps"	default(0)
 //	@Success		200	{object}	[]models.App
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/apps [get]
 
 func (ac *AppController) GetApps(c *fiber.Ctx) error {
@@ -106,8 +106,8 @@ func (ac *AppController) GetApps(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			app	body		models.App	true	"App data to create"
 //	@Success		201	{object}	models.App
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/apps [post]
 func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	var appReq models.App // Use the App struct from your models
@@ -146,10 +146,10 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 //	@Tags			Apps
 //	@Produce		json
 //	@Param		appid	path	int	true	"App ID"
-//	@Success		200	{object}	utils.SuccessResponse
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		404	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Success		200	{object}	utils.JSONResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		404	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/apps/{appid} [delete]
 func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamAppID))
@@ -181,9 +181,9 @@ func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 //	@Param		appid 	path		int			true	"App ID"
 //	@Param		app		body		models.App	true	"Updated app data"
 //	@Success		200	{object}	models.App
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		404	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		404	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/apps/{appid} [put]
 func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamAppID))

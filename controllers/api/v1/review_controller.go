@@ -41,7 +41,7 @@ func NewReviewController(goqu *goqu.Database, logger *zap.Logger) (*ReviewContro
 //	@Tags			Reviews
 //	@Produce		json
 //	@Success		200	{object}	[]models.Review
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/reviews [get]
 func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
 	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit)))
@@ -73,9 +73,9 @@ func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param		reviewid	path		int	true	"Review ID"
 //	@Success		200	{object}	models.Review
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		404	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		404	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/v1/reviews/{reviewid} [get]
 func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 	reviewID, err := c.ParamsInt(constants.ParamReviewID) //  c.ParamsInt
@@ -103,8 +103,8 @@ func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Param			review	body		models.Review	true	"Review data to create"
 //	@Success		201	{object}	models.Review
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/reviews [post]
 func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 	var reviewReq models.Review
@@ -146,10 +146,10 @@ func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 //	@Tags			Reviews
 //	@Produce		json
 //	@Param		id	path		int	true	"Review ID"
-//	@Success		200	{object}	utils.SuccessResponse
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		404	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Success		200	{object}	utils.JSONResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		404	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/reviews/{reviewid} [delete]
 func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
@@ -181,9 +181,9 @@ func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 //	@Param		id		path		int			true	"Review ID"
 //	@Param		review	body		models.Review	true	"Updated review data"
 //	@Success		200	{object}	models.Review
-//	@Failure		400	{object}	utils.ErrorResponse
-//	@Failure		404	{object}	utils.ErrorResponse
-//	@Failure		500	{object}	utils.ErrorResponse
+//	@Failure		400	{object}	utils.JSONResponse
+//	@Failure		404	{object}	utils.JSONResponse
+//	@Failure		500	{object}	utils.JSONResponse
 //	@Router			/reviews/{reviewid} [put]
 func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))

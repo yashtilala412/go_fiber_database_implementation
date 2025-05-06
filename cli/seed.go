@@ -8,6 +8,7 @@ import (
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/database"
 	_ "github.com/lib/pq" // for postgres dialect
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 // GetSeedCommandDef initializes the seed command
@@ -34,7 +35,7 @@ func GetSeedCommandDef(cfg config.AppConfig) cobra.Command {
 				fmt.Println("Warning: Could not access the underlying *sql.DB to close the connection.")
 			}
 
-			err = database.SeedData(cfg, dbConnGoqu)
+			err = database.SeedData(cfg, dbConnGoqu, &zap.Logger{})
 			if err != nil {
 				return fmt.Errorf("failed to seed data: %w", err)
 			}
