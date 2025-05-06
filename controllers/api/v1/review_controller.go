@@ -34,6 +34,15 @@ func NewReviewController(goqu *goqu.Database, logger *zap.Logger) (*ReviewContro
 	}, nil
 }
 
+// GetReviews retrieves all reviews.
+//
+//	@Summary		Get All Reviews
+//	@Description	Retrieves a list of all reviews from the database.
+//	@Tags			Reviews
+//	@Produce		json
+//	@Success		200	{object}	[]models.Review
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/reviews [get]
 func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
 	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit)))
 	if err != nil {
@@ -56,6 +65,18 @@ func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
 	return utils.JSONSuccess(c, http.StatusOK, reviews)
 }
 
+// GetReview retrieves a single review by its ID.
+//
+//	@Summary		Get Review by ID
+//	@Description	Retrieves a single review from the database.
+//	@Tags			Reviews
+//	@Produce		json
+//	@Param		reviewid	path		int	true	"Review ID"
+//	@Success		200	{object}	models.Review
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/reviews/{reviewid} [get]
 func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 	reviewID, err := c.ParamsInt(constants.ParamReviewID) //  c.ParamsInt
 	if err != nil {
@@ -72,6 +93,19 @@ func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 	}
 	return utils.JSONSuccess(c, http.StatusOK, review)
 }
+
+// CreateReviewData handles the creation of new review data.
+//
+//	@Summary		Create Review Data
+//	@Description	Creates a new review data entry in the database.
+//	@Tags			Reviews
+//	@Accept			json
+//	@Produce		json
+//	@Param			review	body		models.Review	true	"Review data to create"
+//	@Success		201	{object}	models.Review
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/reviews [post]
 func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 	var reviewReq models.Review
 
@@ -96,7 +130,7 @@ func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 		SentimentSubjectivity: reviewReq.SentimentSubjectivity,
 	}
 
-	insertedReview, err := rc.reviewService.InsertReviewData(reviewToInsert)
+	insertedReview, err := rc.reviewService.InsertReviews(reviewToInsert)
 	if err != nil {
 		rc.logger.Error("Error inserting review data", zap.Error(err))
 		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFiledToCreateReviewApp)
@@ -104,6 +138,19 @@ func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusCreated, insertedReview)
 }
+
+// DeleteReview deletes a review by its ID.
+//
+//	@Summary		Delete Review by ID
+//	@Description	Deletes a review from the database.
+//	@Tags			Reviews
+//	@Produce		json
+//	@Param		id	path		int	true	"Review ID"
+//	@Success		200	{object}	utils.SuccessResponse
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/reviews/{reviewid} [delete]
 func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
 	if err != nil {
@@ -111,7 +158,7 @@ func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidReviewID)
 	}
 
-	err = rc.reviewService.DeleteByID(id)
+	err = rc.reviewService.DeleteApp(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			rc.logger.Warn("Review not found", zap.Int("id", id))
@@ -123,6 +170,21 @@ func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusOK, constants.ReviewsDeletedSuccessfully)
 }
+
+// UpdateReview updates a review.
+//
+//	@Summary		Update Review
+//	@Description	Updates an existing review in the database.
+//	@Tags			Reviews
+//	@Accept			json
+//	@Produce		json
+//	@Param		id		path		int			true	"Review ID"
+//	@Param		review	body		models.Review	true	"Updated review data"
+//	@Success		200	{object}	models.Review
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/reviews/{reviewid} [put]
 func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
 	if err != nil {
@@ -144,7 +206,7 @@ func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
 	}
 
-	updatedReview, err = rc.reviewService.UpdateByID(id, updatedReview)
+	updatedReview, err = rc.reviewService.UpdateApp(id, updatedReview)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			rc.logger.Warn("Review not found", zap.Int("id", id))

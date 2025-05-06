@@ -35,6 +35,18 @@ func NewAppController(goqu *goqu.Database, logger *zap.Logger) (*AppController, 
 	}, nil
 }
 
+// GetApp retrieves a single app by its ID.
+//
+//	@Summary		Get App by ID
+//	@Description	Retrieves a single app from the database.
+//	@Tags			Apps
+//	@Produce		json
+//	@Param		appid	path		int	true	"App ID"
+//	@Success		200	{object}	models.App
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/apps/{appid} [get]
 func (ac *AppController) GetApp(c *fiber.Ctx) error {
 	appID, err := c.ParamsInt(constants.ParamAppID) // Use c.ParamsInt
 	if err != nil {
@@ -51,6 +63,18 @@ func (ac *AppController) GetApp(c *fiber.Ctx) error {
 	}
 	return utils.JSONSuccess(c, http.StatusOK, app)
 }
+
+// GetApps retrieves all apps.
+//	@Summary		Get All Apps
+//	@Description	Retrieves a list of apps from the database.  Supports pagination.
+//	@Tags			Apps
+//	@Produce		json
+//	@Param		limit	query	int	false	"Maximum number of apps to retrieve"	default(10)
+//	@Param		offset	query	int	false	"Starting position for retrieving apps"	default(0)
+//	@Success		200	{object}	[]models.App
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/apps [get]
 
 func (ac *AppController) GetApps(c *fiber.Ctx) error {
 	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit))) // Use constants
@@ -72,6 +96,19 @@ func (ac *AppController) GetApps(c *fiber.Ctx) error {
 	}
 	return utils.JSONSuccess(c, http.StatusOK, apps)
 }
+
+// CreateAppData handles the creation of new app data.
+//
+//	@Summary		Create App Data
+//	@Description	Creates a new app data entry in the database.
+//	@Tags			Apps
+//	@Accept			json
+//	@Produce		json
+//	@Param			app	body		models.App	true	"App data to create"
+//	@Success		201	{object}	models.App
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/apps [post]
 func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	var appReq models.App // Use the App struct from your models
 
@@ -92,7 +129,7 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	}
 
 	// Insert the app data into the database.
-	insertedApp, err := ac.appService.InsertAppData(appReq)
+	insertedApp, err := ac.appService.InsertApps(appReq)
 	if err != nil {
 		ac.logger.Error("Error inserting app data", zap.Error(err))
 		return utils.JSONError(c, http.StatusInternalServerError, constants.ErrorFiledToCreateApp) //Use a constant
@@ -102,6 +139,18 @@ func (ac *AppController) CreateAppData(c *fiber.Ctx) error {
 	return utils.JSONSuccess(c, http.StatusCreated, insertedApp)
 }
 
+// DeleteApp deletes an app by its ID.
+//
+//	@Summary		Delete App by ID
+//	@Description	Deletes a single app from the database by its ID.
+//	@Tags			Apps
+//	@Produce		json
+//	@Param		appid	path	int	true	"App ID"
+//	@Success		200	{object}	utils.SuccessResponse
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/apps/{appid} [delete]
 func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamAppID))
 	if err != nil {
@@ -109,7 +158,7 @@ func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidAppID)
 	}
 
-	err = ac.appService.DeleteByID(id)
+	err = ac.appService.DeleteApp(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ac.logger.Warn("App not found", zap.Int("id", id))
@@ -121,6 +170,21 @@ func (ac *AppController) DeleteApp(c *fiber.Ctx) error {
 
 	return utils.JSONSuccess(c, http.StatusOK, constants.AppsDeletedSuccessfully)
 }
+
+// UpdateApp updates an existing app.
+//
+//	@Summary		Update App
+//	@Description	Updates an existing app in the database.
+//	@Tags			Apps
+//	@Accept			json
+//	@Produce		json
+//	@Param		appid 	path		int			true	"App ID"
+//	@Param		app		body		models.App	true	"Updated app data"
+//	@Success		200	{object}	models.App
+//	@Failure		400	{object}	utils.ErrorResponse
+//	@Failure		404	{object}	utils.ErrorResponse
+//	@Failure		500	{object}	utils.ErrorResponse
+//	@Router			/v1/apps/{appid} [put]
 func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamAppID))
 	if err != nil {
@@ -142,7 +206,7 @@ func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
 	}
 
-	updatedApp, err = ac.appService.UpdateByID(id, updatedApp)
+	updatedApp, err = ac.appService.UpdateApp(id, updatedApp)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ac.logger.Warn("App not found", zap.Int("id", id))
