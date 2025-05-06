@@ -1,7 +1,7 @@
 -- +migrate Up
 
-CREATE TABLE app_data (
-    app_id SERIAL PRIMARY KEY,
+CREATE TABLE apps (
+    id SERIAL PRIMARY KEY,
     app TEXT NOT NULL,
     category TEXT NOT NULL,
     rating REAL,

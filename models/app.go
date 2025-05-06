@@ -7,11 +7,11 @@ import (
 )
 
 // AppTable represent table name
-const AppTable = "app_data"
+const AppTable = "apps"
 
 // App model
 type App struct {
-	AppId         int     `json:"app_id" db:"app_id"`
+	AppId         int     `json:"id" db:"id"`
 	App           string  `json:"app" db:"app" validate:"required"`
 	Category      string  `json:"category" db:"category" validate:"required"`
 	Rating        float64 `json:"rating" db:"rating" validate:"required"`
@@ -61,7 +61,7 @@ func (model *AppModel) GetApps(limit, offset int) ([]App, error) {
 func (model *AppModel) GetById(id int) (App, error) {
 	app := App{}
 	found, err := model.db.From(AppTable).Where(goqu.Ex{
-		"app_id": id,
+		"id": id,
 	}).ScanStruct(&app)
 
 	if err != nil {
@@ -96,7 +96,7 @@ func (model *AppModel) InsertApps(app App) (App, error) {
 		return app, err
 	}
 
-	//  we should query the database to get the complete record, including the generated app_id.
+	//  we should query the database to get the complete record, including the generated id.
 	var insertedApp App
 	found, err := model.db.From(AppTable).
 		Where(goqu.Ex{ // Assuming other fields are unique enough to identify the inserted row.
@@ -116,7 +116,7 @@ func (model *AppModel) InsertApps(app App) (App, error) {
 }
 func (model *AppModel) DeleteApp(id int) error {
 	result, err := model.db.Delete(AppTable).Where(goqu.Ex{
-		"app_id": id,
+		"id": id,
 	}).Executor().Exec()
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func (model *AppModel) UpdateApp(id int, app App) (App, error) {
 		"current_ver":    app.CurrentVer,  // Changed to snake case
 		"android_ver":    app.AndroidVer,  // Changed to snake case
 	}).Where(goqu.Ex{
-		"app_id": id,
+		"id": id,
 	}).Executor().Exec()
 	if err != nil {
 		return App{}, err
@@ -173,7 +173,7 @@ func (model *AppModel) UpdateApp(id int, app App) (App, error) {
 	// Retrieve the updated record to return it.
 	updatedApp := App{}
 	found, err := tx.From(AppTable).Where(goqu.Ex{
-		"app_id": id,
+		"id": id,
 	}).ScanStruct(&updatedApp)
 	if err != nil {
 		return App{}, err

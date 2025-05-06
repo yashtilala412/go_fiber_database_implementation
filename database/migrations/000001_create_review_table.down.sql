@@ -1,3 +1,3 @@
 -- +migrate Down
 
-DROP TABLE IF EXISTS review_data;
+DROP TABLE IF EXISTS reviews;
