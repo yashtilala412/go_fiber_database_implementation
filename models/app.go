@@ -75,8 +75,8 @@ func (model *AppModel) GetById(id int) (App, error) {
 	return app, nil
 }
 
-// InsertAppData inserts a new app into the database.
-func (model *AppModel) InsertAppData(app App) (App, error) {
+// InsertApps inserts a new app into the database.
+func (model *AppModel) InsertApps(app App) (App, error) {
 	_, err := model.db.Insert(AppTable).Rows(goqu.Record{
 		"app":            app.App,
 		"category":       app.Category,
@@ -114,7 +114,7 @@ func (model *AppModel) InsertAppData(app App) (App, error) {
 	}
 	return insertedApp, nil // Return the full record.
 }
-func (model *AppModel) DeleteByID(id int) error {
+func (model *AppModel) DeleteApp(id int) error {
 	result, err := model.db.Delete(AppTable).Where(goqu.Ex{
 		"app_id": id,
 	}).Executor().Exec()
@@ -131,8 +131,8 @@ func (model *AppModel) DeleteByID(id int) error {
 	return nil
 }
 
-// UpdateByID updates an existing app by its ID.
-func (model *AppModel) UpdateByID(id int, app App) (App, error) {
+// UpdateApp updates an existing app by its ID.
+func (model *AppModel) UpdateApp(id int, app App) (App, error) {
 	//  Use a transaction to ensure data consistency.
 	tx, err := model.db.Begin()
 	if err != nil {

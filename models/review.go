@@ -67,8 +67,8 @@ func (model *ReviewModel) GetById(id int) (Review, error) {
 	return review, nil
 }
 
-// InsertReviewData inserts a new review into the database.
-func (model *ReviewModel) InsertReviewData(review Review) (Review, error) {
+// InsertReviews inserts a new review into the database.
+func (model *ReviewModel) InsertReviews(review Review) (Review, error) {
 	_, err := model.db.Insert(ReviewTable).Rows(goqu.Record{
 		"app":                    review.App,
 		"translated_review":      review.TranslatedReview,
@@ -100,8 +100,8 @@ func (model *ReviewModel) InsertReviewData(review Review) (Review, error) {
 	return insertedReview, nil
 }
 
-// DeleteByID deletes a review by its ID.
-func (model *ReviewModel) DeleteByID(id int) error {
+// DeleteApp deletes a review by its ID.
+func (model *ReviewModel) DeleteApp(id int) error {
 	result, err := model.db.Delete(ReviewTable).Where(goqu.Ex{
 		"review_id": id,
 	}).Executor().Exec()
@@ -118,8 +118,8 @@ func (model *ReviewModel) DeleteByID(id int) error {
 	return nil
 }
 
-// UpdateByID updates an existing review by its ID.
-func (model *ReviewModel) UpdateByID(id int, review Review) (Review, error) {
+// UpdateApp updates an existing review by its ID.
+func (model *ReviewModel) UpdateApp(id int, review Review) (Review, error) {
 	//  Use a transaction to ensure data consistency.
 	tx, err := model.db.Begin()
 	if err != nil {
