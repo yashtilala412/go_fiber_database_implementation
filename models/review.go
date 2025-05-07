@@ -2,6 +2,9 @@ package models
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
 )
@@ -11,17 +14,77 @@ const ReviewTable = "reviews"
 
 // Review model
 type Review struct {
-	ReviewID              int      `json:"id" db:"id"`
-	App                   string   `json:"app" db:"app" validate:"required"`
-	TranslatedReview      string   `json:"translated_review" db:"translated_review" validate:"required"`
-	Sentiment             string   `json:"sentiment" db:"sentiment" validate:"required"`
-	SentimentPolarity     *float64 `json:"sentiment_polarity" db:"sentiment_polarity"`
-	SentimentSubjectivity *float64 `json:"sentiment_subjectivity" db:"sentiment_subjectivity"`
+	ReviewID              int             `json:"id" db:"id"`
+	App                   string          `json:"app" db:"app" validate:"required"`
+	TranslatedReview      string          `json:"translated_review" db:"translated_review" validate:"required"`
+	Sentiment             string          `json:"sentiment" db:"sentiment" validate:"required"`
+	SentimentPolarity     NullableFloat64 `json:"sentiment_polarity" db:"sentiment_polarity"`
+	SentimentSubjectivity NullableFloat64 `json:"sentiment_subjectivity" db:"sentiment_subjectivity"`
 }
 
 // ReviewModel implements review related database operations
 type ReviewModel struct {
 	db *goqu.Database
+}
+
+type NullableFloat64 struct {
+	Float64 float64 `json:"value" swaggertype:"primitive,number"`
+	Valid   bool    `json:"valid" swaggertype:"primitive,boolean"`
+}
+
+// MarshalJSON implements json.Marshaler interface
+func (nf NullableFloat64) MarshalJSON() ([]byte, error) {
+	if !nf.Valid {
+		return []byte("null"), nil
+	}
+	return json.Marshal(nf.Float64)
+}
+
+// UnmarshalJSON implements json.Unmarshaler interface
+func (nf *NullableFloat64) UnmarshalJSON(data []byte) error {
+	// If the input is null, set Valid to false
+	if string(data) == "null" {
+		nf.Valid = false
+		return nil
+	}
+
+	// Otherwise try to unmarshal into float64
+	var f float64
+	if err := json.Unmarshal(data, &f); err != nil {
+		return err
+	}
+
+	nf.Float64 = f
+	nf.Valid = true
+	return nil
+}
+
+// Scan implements the sql.Scanner interface
+func (nf *NullableFloat64) Scan(value interface{}) error {
+	var f sql.NullFloat64
+	if err := f.Scan(value); err != nil {
+		return err
+	}
+
+	nf.Float64 = f.Float64
+	nf.Valid = f.Valid
+	return nil
+}
+
+// Value implements the driver.Valuer interface
+func (nf NullableFloat64) Value() (driver.Value, error) {
+	if !nf.Valid {
+		return nil, nil
+	}
+	return nf.Float64, nil
+}
+
+// String returns a string representation of the value
+func (nf NullableFloat64) String() string {
+	if !nf.Valid {
+		return "NULL"
+	}
+	return fmt.Sprintf("%f", nf.Float64)
 }
 
 // InitReviewModel Init model
@@ -86,7 +149,6 @@ func (model *ReviewModel) InsertReviews(review Review) (Review, error) {
 		Where(goqu.Ex{
 			"app":               review.App,
 			"translated_review": review.TranslatedReview,
-			// Add other unique fields if necessary to ensure correct retrieval
 		}).
 		ScanStruct(&insertedReview)
 
@@ -95,7 +157,7 @@ func (model *ReviewModel) InsertReviews(review Review) (Review, error) {
 	}
 
 	if !found {
-		return review, sql.ErrNoRows // Or a custom error
+		return review, sql.ErrNoRows
 	}
 	return insertedReview, nil
 }
@@ -118,9 +180,7 @@ func (model *ReviewModel) DeleteApp(id int) error {
 	return nil
 }
 
-// UpdateApp updates an existing review by its ID.
 func (model *ReviewModel) UpdateApp(id int, review Review) (Review, error) {
-	//  Use a transaction to ensure data consistency.
 	tx, err := model.db.Begin()
 	if err != nil {
 		return Review{}, err
@@ -149,7 +209,6 @@ func (model *ReviewModel) UpdateApp(id int, review Review) (Review, error) {
 		return Review{}, sql.ErrNoRows // Return error if no rows were updated
 	}
 
-	// Retrieve the updated record to return it.
 	updatedReview := Review{}
 	found, err := tx.From(ReviewTable).Where(goqu.Ex{
 		"id": id,

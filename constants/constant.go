@@ -24,7 +24,7 @@ const (
 	ParamUid = "userId"
 
 	// ParamAppId is the key for app ID route parameter
-	ParamAppId = "appId"
+	ParamAppId = "id"
 	// DefaultLimit is the default page size
 	DefaultLimit = 30
 
@@ -32,7 +32,7 @@ const (
 	DefaultOffset = 1
 )
 const (
-	ParamReviewID = "reviewid"
+	ParamReviewID = "id"
 )
 const (
 	// Error codes for reviews
