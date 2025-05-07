@@ -27,6 +27,7 @@ type ReviewModel struct {
 	db *goqu.Database
 }
 
+// because swagger does not handle sql.Nullfloat64 directly
 type NullableFloat64 struct {
 	Float64 float64 `json:"value" swaggertype:"primitive,number"`
 	Valid   bool    `json:"valid" swaggertype:"primitive,boolean"`
