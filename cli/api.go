@@ -9,6 +9,8 @@ import (
 
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/config"
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/database"
+
+	_ "git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/docs"
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"

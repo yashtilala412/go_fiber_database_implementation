@@ -42,7 +42,7 @@ func setupAppController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Logger
 	// Define the specific routes within the /apps group
 	appRouter.Get(fmt.Sprintf("/:%s", constants.ParamAppID), appController.GetApp) // GET /api/v1/apps/:appId
 	appRouter.Get("/", appController.GetApps)
-	appRouter.Post("/", appController.CreateAppData) // GET /api/v1/apps/
+	appRouter.Post("/", appController.CreateApp) // GET /api/v1/apps/
 	appRouter.Delete(fmt.Sprintf("/:%s", constants.ParamAppID), appController.DeleteApp)
 	appRouter.Put(fmt.Sprintf("/:%s", constants.ParamAppID), appController.UpdateApp)
 	return nil

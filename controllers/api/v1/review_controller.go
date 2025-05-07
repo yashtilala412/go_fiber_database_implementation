@@ -34,15 +34,20 @@ func NewReviewController(goqu *goqu.Database, logger *zap.Logger) (*ReviewContro
 	}, nil
 }
 
-// GetReviews retrieves all reviews.
+// GetReviews retrieves a paginated list of reviews.
 //
-//	@Summary		Get All Reviews
-//	@Description	Retrieves a list of all reviews from the database.
+//	@Summary		Get Reviews
+//	@Description	Fetches reviews from the database with pagination.
 //	@Tags			Reviews
+//	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	[]models.Review
+//	@Param			limit	query	int	false	"Number of reviews to return"
+//	@Param			offset	query	int	false	"Offset for pagination"
+//	@Success		200	{array}	models.Review
+//	@Failure		400	{object}	utils.JSONResponse
 //	@Failure		500	{object}	utils.JSONResponse
-//	@Router			/v1/reviews [get]
+//	@Router			/api/v1/reviews [get]
+
 func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
 	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit)))
 	if err != nil {
@@ -65,18 +70,20 @@ func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
 	return utils.JSONSuccess(c, http.StatusOK, reviews)
 }
 
-// GetReview retrieves a single review by its ID.
+// GetReview retrieves a review by ID.
 //
-//	@Summary		Get Review by ID
-//	@Description	Retrieves a single review from the database.
+//	@Summary		Get Review
+//	@Description	Fetches a review using its ID.
 //	@Tags			Reviews
+//	@Accept			json
 //	@Produce		json
-//	@Param		reviewid	path		int	true	"Review ID"
+//	@Param			id	path	int	true	"Review ID"
 //	@Success		200	{object}	models.Review
 //	@Failure		400	{object}	utils.JSONResponse
 //	@Failure		404	{object}	utils.JSONResponse
 //	@Failure		500	{object}	utils.JSONResponse
-//	@Router			/v1/reviews/{reviewid} [get]
+//	@Router			/api/v1/reviews/{id} [get]
+
 func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 	reviewID, err := c.ParamsInt(constants.ParamReviewID) //  c.ParamsInt
 	if err != nil {
@@ -94,18 +101,19 @@ func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 	return utils.JSONSuccess(c, http.StatusOK, review)
 }
 
-// CreateReviewData handles the creation of new review data.
+// CreateReviewData adds a new review.
 //
-//	@Summary		Create Review Data
-//	@Description	Creates a new review data entry in the database.
+//	@Summary		Create Review
+//	@Description	Creates a new review in the database.
 //	@Tags			Reviews
 //	@Accept			json
 //	@Produce		json
-//	@Param			review	body		models.Review	true	"Review data to create"
+//	@Param			review	body	models.Review	true	"Review data to create"
 //	@Success		201	{object}	models.Review
 //	@Failure		400	{object}	utils.JSONResponse
 //	@Failure		500	{object}	utils.JSONResponse
-//	@Router			/reviews [post]
+//	@Router			/api/v1/reviews [post]
+
 func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 	var reviewReq models.Review
 
@@ -139,18 +147,20 @@ func (rc *ReviewController) CreateReviewData(c *fiber.Ctx) error {
 	return utils.JSONSuccess(c, http.StatusCreated, insertedReview)
 }
 
-// DeleteReview deletes a review by its ID.
+// DeleteReview deletes a review by ID.
 //
-//	@Summary		Delete Review by ID
-//	@Description	Deletes a review from the database.
+//	@Summary		Delete Review
+//	@Description	Deletes a review by its ID.
 //	@Tags			Reviews
+//	@Accept			json
 //	@Produce		json
-//	@Param		id	path		int	true	"Review ID"
+//	@Param			id	path	int	true	"Review ID"
 //	@Success		200	{object}	utils.JSONResponse
 //	@Failure		400	{object}	utils.JSONResponse
 //	@Failure		404	{object}	utils.JSONResponse
 //	@Failure		500	{object}	utils.JSONResponse
-//	@Router			/reviews/{reviewid} [delete]
+//	@Router			/api/v1/reviews/{id} [delete]
+
 func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
 	if err != nil {
@@ -184,7 +194,7 @@ func (rc *ReviewController) DeleteReview(c *fiber.Ctx) error {
 //	@Failure		400	{object}	utils.JSONResponse
 //	@Failure		404	{object}	utils.JSONResponse
 //	@Failure		500	{object}	utils.JSONResponse
-//	@Router			/reviews/{reviewid} [put]
+//	@Router			/api/v1/reviews/{id} [put]
 func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params(constants.ParamReviewID))
 	if err != nil {
