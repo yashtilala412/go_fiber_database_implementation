@@ -114,7 +114,7 @@ func (model *ReviewModel) GetReviews(limit, offset int) ([]Review, error) {
 }
 
 // GetById gets a review by its ID.
-func (model *ReviewModel) GetById(id int) (Review, error) {
+func (model *ReviewModel) GetReviewById(id int) (Review, error) {
 	review := Review{}
 	found, err := model.db.From(ReviewTable).Where(goqu.Ex{
 		"id": id,

@@ -15,6 +15,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.18.0
+	github.com/rs/xid v1.6.0
 	github.com/rubenv/sql-migrate v1.8.0
 	github.com/samber/lo v1.38.1
 	github.com/sirupsen/logrus v1.9.3

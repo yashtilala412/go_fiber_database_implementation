@@ -90,7 +90,7 @@ func (rc *ReviewController) GetReview(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidReviewID)
 	}
 
-	review, err := rc.reviewService.GetById(reviewID)
+	review, err := rc.reviewService.GetReviewById(reviewID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return utils.JSONFail(c, http.StatusNotFound, constants.ErrorReviewNotFound)

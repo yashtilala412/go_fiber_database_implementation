@@ -58,7 +58,7 @@ func (model *AppModel) GetApps(limit, offset int) ([]App, error) {
 }
 
 // GetById gets an app by its ID.  It retrieves all fields from the database.
-func (model *AppModel) GetById(id int) (App, error) {
+func (model *AppModel) GetAppById(id int) (App, error) {
 	app := App{}
 	found, err := model.db.From(AppTable).Where(goqu.Ex{
 		"id": id,
@@ -76,6 +76,7 @@ func (model *AppModel) GetById(id int) (App, error) {
 }
 
 // InsertApps inserts a new app into the database.
+// For AppModel with database-generated ID (SERIAL)
 func (model *AppModel) InsertApps(app App) (App, error) {
 	_, err := model.db.Insert(AppTable).Rows(goqu.Record{
 		"app":            app.App,
