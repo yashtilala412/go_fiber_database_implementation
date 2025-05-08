@@ -55,7 +55,7 @@ func (ac *AppController) GetApp(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidAppID)
 	}
 
-	app, err := ac.appService.GetById(appID)
+	app, err := ac.appService.GetAppById(appID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return utils.JSONFail(c, http.StatusNotFound, constants.ErrorAppNotFound)
@@ -202,7 +202,6 @@ func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
 
 	var updatedApp models.App
 	if err := c.BodyParser(&updatedApp); err != nil {
-		ac.logger.Error("Error parsing request body", zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidRequestBody)
 	}
 
@@ -210,7 +209,6 @@ func (ac *AppController) UpdateApp(c *fiber.Ctx) error {
 	validate := validator.New()
 	err = validate.Struct(updatedApp)
 	if err != nil {
-		ac.logger.Error("Validation error", zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
 	}
 
