@@ -49,10 +49,16 @@ func NewReviewController(goqu *goqu.Database, logger *zap.Logger) (*ReviewContro
 //	@Router			/api/v1/reviews [get]
 
 func (rc *ReviewController) GetReviews(c *fiber.Ctx) error {
+	const MaxLimit = 500 // Set maximum allowed limit
+
 	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit)))
 	if err != nil {
 		rc.logger.Error("Invalid limit parameter", zap.String("limit", c.Query("limit")), zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidLimit)
+	}
+	if limit > MaxLimit {
+		rc.logger.Warn("Requested limit exceeds maximum", zap.Int("limit", limit))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorlimitAccess)
 	}
 
 	offset, err := strconv.Atoi(c.Query("offset", strconv.Itoa(constants.DefaultOffset)))

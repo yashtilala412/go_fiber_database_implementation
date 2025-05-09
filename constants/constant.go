@@ -46,6 +46,7 @@ const (
 	ErrorInvalidRequestBody     = "Invalid request body"
 	ErrorFiledToCreateApp       = "Failed to create app data: "
 	ErrorFiledToCreateReviewApp = "Failed to create review data: "
+	ErrorlimitAccess            = "Limit exceeded: max 500 apps per request allowed for this PC"
 )
 const (
 	ErrorFaiedToDeleteReview = "Failed to delete review"
