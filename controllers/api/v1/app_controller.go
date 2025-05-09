@@ -81,13 +81,21 @@ func (ac *AppController) GetApp(c *fiber.Ctx) error {
 //	@Router			/api/v1/apps [get]
 
 func (ac *AppController) GetApps(c *fiber.Ctx) error {
-	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit))) // Use constants
+	const MaxLimit = 500 // Set maximum allowed limit
+
+	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit)))
 	if err != nil {
 		ac.logger.Error("Invalid limit parameter", zap.String("limit", c.Query("limit")), zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidLimit)
 	}
 
-	offset, err := strconv.Atoi(c.Query("offset", strconv.Itoa(constants.DefaultOffset))) // Use constants
+	// Check if limit exceeds MaxLimit
+	if limit > MaxLimit {
+		ac.logger.Warn("Requested limit exceeds maximum", zap.Int("limit", limit))
+		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorlimitAccess)
+	}
+
+	offset, err := strconv.Atoi(c.Query("offset", strconv.Itoa(constants.DefaultOffset)))
 	if err != nil {
 		ac.logger.Error("Invalid offset parameter", zap.String("offset", c.Query("offset")), zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidOffset)
@@ -98,6 +106,7 @@ func (ac *AppController) GetApps(c *fiber.Ctx) error {
 		ac.logger.Error("Failed to get apps", zap.Error(err))
 		return utils.JSONError(c, http.StatusInternalServerError, constants.FailedToGetApp)
 	}
+
 	return utils.JSONSuccess(c, http.StatusOK, apps)
 }
 
