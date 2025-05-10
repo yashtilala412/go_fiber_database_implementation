@@ -77,44 +77,38 @@ func (model *AppModel) GetAppById(id int) (App, error) {
 
 // InsertApps inserts a new app into the database.
 // For AppModel with database-generated ID (SERIAL)
+// InsertApps inserts a new app into the database.
 func (model *AppModel) InsertApps(app App) (App, error) {
-	_, err := model.db.Insert(AppTable).Rows(goqu.Record{
-		"app":            app.App,
-		"category":       app.Category,
-		"rating":         app.Rating,
-		"reviews":        app.Reviews,
-		"size":           app.Size,
-		"installs":       app.Installs,
-		"type":           app.Type,
-		"price":          app.Price,
-		"content_rating": app.ContentRating, // Changed to snake case
-		"genres":         app.Genres,
-		"last_updated":   app.LastUpdated, // Changed to snake case
-		"current_ver":    app.CurrentVer,  // Changed to snake case
-		"android_ver":    app.AndroidVer,  // Changed to snake case
-	}).Executor().Exec()
-	if err != nil {
-		return app, err
-	}
+	var insertedID int64
 
-	//  we should query the database to get the complete record, including the generated id.
-	var insertedApp App
-	found, err := model.db.From(AppTable).
-		Where(goqu.Ex{ // Assuming other fields are unique enough to identify the inserted row.
-			"app":      app.App,
-			"category": app.Category,
-			// Add other fields to uniquely identify the record.
+	_, err := model.db.Insert(AppTable).
+		Rows(goqu.Record{
+			"app":            app.App,
+			"category":       app.Category,
+			"rating":         app.Rating,
+			"reviews":        app.Reviews,
+			"size":           app.Size,
+			"installs":       app.Installs,
+			"type":           app.Type,
+			"price":          app.Price,
+			"content_rating": app.ContentRating,
+			"genres":         app.Genres,
+			"last_updated":   app.LastUpdated,
+			"current_ver":    app.CurrentVer,
+			"android_ver":    app.AndroidVer,
 		}).
-		ScanStruct(&insertedApp)
+		Returning("id"). // This makes PostgreSQL return the inserted ID
+		Executor().
+		ScanVal(&insertedID)
 
 	if err != nil {
-		return app, err
+		return App{}, err
 	}
-	if !found {
-		return app, sql.ErrNoRows // Or some other error to indicate that the record was not found.
-	}
-	return insertedApp, nil // Return the full record.
+
+	app.AppId = int(insertedID)
+	return app, nil
 }
+
 func (model *AppModel) DeleteApp(id int) error {
 	result, err := model.db.Delete(AppTable).Where(goqu.Ex{
 		"id": id,
