@@ -132,35 +132,28 @@ func (model *ReviewModel) GetReviewById(id int) (Review, error) {
 }
 
 // InsertReviews inserts a new review into the database.
+// InsertReviews inserts a new review into the database.
 func (model *ReviewModel) InsertReviews(review Review) (Review, error) {
-	_, err := model.db.Insert(ReviewTable).Rows(goqu.Record{
-		"app":                    review.App,
-		"translated_review":      review.TranslatedReview,
-		"sentiment":              review.Sentiment,
-		"sentiment_polarity":     review.SentimentPolarity,
-		"sentiment_subjectivity": review.SentimentSubjectivity,
-	}).Executor().Exec()
-	if err != nil {
-		return review, err
-	}
+	var insertedID int64
 
-	// Retrieve the inserted review to get the generated ID.
-	var insertedReview Review
-	found, err := model.db.From(ReviewTable).
-		Where(goqu.Ex{
-			"app":               review.App,
-			"translated_review": review.TranslatedReview,
+	_, err := model.db.Insert(ReviewTable).
+		Rows(goqu.Record{
+			"app":                    review.App,
+			"translated_review":      review.TranslatedReview,
+			"sentiment":              review.Sentiment,
+			"sentiment_polarity":     review.SentimentPolarity,
+			"sentiment_subjectivity": review.SentimentSubjectivity,
 		}).
-		ScanStruct(&insertedReview)
+		Returning("id"). // Get the ID of the inserted row
+		Executor().
+		ScanVal(&insertedID)
 
 	if err != nil {
-		return review, err
+		return Review{}, err
 	}
 
-	if !found {
-		return review, sql.ErrNoRows
-	}
-	return insertedReview, nil
+	review.ReviewID = int(insertedID)
+	return review, nil
 }
 
 // DeleteApp deletes a review by its ID.
