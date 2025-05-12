@@ -126,17 +126,8 @@ func (model *AppModel) DeleteApp(id int) error {
 	return nil
 }
 
-// UpdateApp updates an existing app by its ID.
 func (model *AppModel) UpdateApp(id int, app App) (App, error) {
-	//  Use a transaction to ensure data consistency.
-	tx, err := model.db.Begin()
-	if err != nil {
-		return App{}, err
-	}
-	defer tx.Rollback() // Rollback if any error occurs
-
-	// Update the record.
-	result, err := tx.Update(AppTable).Set(goqu.Record{
+	result, err := model.db.Update(AppTable).Set(goqu.Record{
 		"app":            app.App,
 		"category":       app.Category,
 		"rating":         app.Rating,
@@ -145,14 +136,12 @@ func (model *AppModel) UpdateApp(id int, app App) (App, error) {
 		"installs":       app.Installs,
 		"type":           app.Type,
 		"price":          app.Price,
-		"content_rating": app.ContentRating, // Changed to snake case
+		"content_rating": app.ContentRating,
 		"genres":         app.Genres,
-		"last_updated":   app.LastUpdated, // Changed to snake case
-		"current_ver":    app.CurrentVer,  // Changed to snake case
-		"android_ver":    app.AndroidVer,  // Changed to snake case
-	}).Where(goqu.Ex{
-		"id": id,
-	}).Executor().Exec()
+		"last_updated":   app.LastUpdated,
+		"current_ver":    app.CurrentVer,
+		"android_ver":    app.AndroidVer,
+	}).Where(goqu.Ex{"id": id}).Executor().Exec()
 	if err != nil {
 		return App{}, err
 	}
@@ -162,24 +151,9 @@ func (model *AppModel) UpdateApp(id int, app App) (App, error) {
 		return App{}, err
 	}
 	if rowsAffected == 0 {
-		return App{}, sql.ErrNoRows // Return error if no rows were updated
+		return App{}, sql.ErrNoRows
 	}
 
-	// Retrieve the updated record to return it.
-	updatedApp := App{}
-	found, err := tx.From(AppTable).Where(goqu.Ex{
-		"id": id,
-	}).ScanStruct(&updatedApp)
-	if err != nil {
-		return App{}, err
-	}
-	if !found {
-		return App{}, sql.ErrNoRows //Should not happen, but handle it.
-	}
-
-	// Commit the transaction.
-	if err = tx.Commit(); err != nil {
-		return App{}, err
-	}
-	return updatedApp, nil
+	app.AppId = id
+	return app, nil
 }
