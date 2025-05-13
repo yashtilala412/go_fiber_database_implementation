@@ -84,7 +84,7 @@ func (ac *AppController) GetApps(c *fiber.Ctx) error {
 	const MaxLimit = 500 // Set maximum allowed limit
 
 	limit, err := strconv.Atoi(c.Query("limit", strconv.Itoa(constants.DefaultLimit)))
-	if err != nil {
+	if err != nil || limit <= 0 {
 		ac.logger.Error("Invalid limit parameter", zap.String("limit", c.Query("limit")), zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidLimit)
 	}
