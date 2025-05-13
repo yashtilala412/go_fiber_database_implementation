@@ -222,7 +222,7 @@ func (rc *ReviewController) UpdateReview(c *fiber.Ctx) error {
 		return utils.JSONError(c, http.StatusBadRequest, utils.ValidatorErrorString(err)) //  Adapt this as needed
 	}
 
-	updatedReview, err = rc.reviewService.UpdateApp(id, updatedReview)
+	updatedReview, err = rc.reviewService.UpdateReview(id, updatedReview)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			rc.logger.Warn("Review not found", zap.Int("id", id))
