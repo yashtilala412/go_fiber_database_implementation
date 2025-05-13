@@ -152,7 +152,8 @@ func seedReviewData(csvPath string, tx *goqu.TxDatabase, logger *zap.Logger) err
 		}
 
 		if len(row) != expectedFields {
-			fmt.Printf("Warning: Skipping review_data row at line %d with %d fields (expected %d): %v\n", lineNum, err, row)
+			fmt.Printf("Warning: Skipping review_data row at line %d with %d fields (expected %d): %v\n", lineNum, len(row), expectedFields, row)
+
 			continue
 		}
 
