@@ -28,6 +28,11 @@ func Setup(app *fiber.App, goqu *goqu.Database, logger *zap.Logger, pMetrics *pM
 	if err != nil {
 		return err
 	}
+
+	err = healthCheckController(app, goqu, logger)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -61,5 +66,16 @@ func setupReviewController(v1 fiber.Router, goqu *goqu.Database, logger *zap.Log
 	reviewRouter.Delete(fmt.Sprintf("/:%s", constants.ParamReviewID), reviewController.DeleteReview)
 	reviewRouter.Put(fmt.Sprintf("/:%s", constants.ParamReviewID), reviewController.UpdateReview)
 
+	return nil
+}
+func healthCheckController(app *fiber.App, goqu *goqu.Database, logger *zap.Logger) error {
+	healthController, err := controllers.NewHealthController(goqu, logger)
+	if err != nil {
+		return err
+	}
+
+	healthz := app.Group("/healthz")
+	healthz.Get("/", healthController.Overall)
+	healthz.Get("/db", healthController.Db)
 	return nil
 }

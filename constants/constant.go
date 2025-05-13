@@ -56,3 +56,6 @@ const (
 	ReviewsDeletedSuccessfully = "Review deleted successfully"
 	AppsDeletedSuccessfully    = "Apps deleted successfully"
 )
+const (
+	ErrHealthCheckDb = "error while health checking of db"
+)

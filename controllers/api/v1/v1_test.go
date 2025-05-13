@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	url := fmt.Sprintf("http://%s", cfg.Port)
+	url := fmt.Sprintf("http://%s:%s", cfg.Host, cfg.Port)
 
 	client = resty.New().SetBaseURL(url)
 
@@ -59,7 +59,10 @@ func TestMain(m *testing.M) {
 	}()
 
 	serverRunning := false
-	for count := 0; count < 100; count += 1 {
+	healthCheckURL := fmt.Sprintf("%s/healthz", url) // Construct the full target URL
+
+	log.Printf("Starting health check loop, attempting to reach %s", healthCheckURL) // Log before the loop
+	for count := 0; count < 10; count += 1 {
 		client = client.SetTimeout(time.Second * 2)
 		res, err := client.R().EnableTrace().Get("/healthz")
 		if err == nil {
