@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	// Assuming your models and utils packages are importable
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/models"
 	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/utils"
 
@@ -31,9 +30,9 @@ func newTestApp(tag string) models.App {
 		Price:         "0",
 		ContentRating: "Everyone",
 		Genres:        "Testing",
-		LastUpdated:   time.Now().Format("Jan 02, 2006"),
-		CurrentVer:    "1.0",
-		AndroidVer:    "4.0.3 and up",
+		LastUpdated:   time.Now().Format("Jan 02, 2006"), // Included because your model requires it
+		CurrentVer:    "1.0",                             // Included because your model requires it
+		AndroidVer:    "4.0.3 and up",                    // Included because your model requires it
 	}
 }
 
@@ -56,14 +55,13 @@ func TestAppController_CreateApp(t *testing.T) {
 			R().
 			SetHeader("Content-Type", "application/json").
 			SetBody(reqBody).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Post("/api/v1/apps")
 
 		require.Nil(t, err, "Error making POST request")
 		assert.Equal(t, http.StatusCreated, res.StatusCode(), "Expected 201 Created status code")
 		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success'")
 
-		// Access data directly from resBody after SetResult
 		responseDataMap, ok := resBody.Data.(map[string]interface{})
 		require.True(t, ok, "Response data is not a map[string]interface{}")
 
@@ -85,11 +83,12 @@ func TestAppController_CreateApp(t *testing.T) {
 			R().
 			SetHeader("Content-Type", "application/json").
 			SetBody(reqBody).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Post("/api/v1/apps")
 
 		require.Nil(t, err, "Error making POST request with invalid input")
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
+		// This assertion expects Status to be "error". It will fail if utils.JSONError returns "".
 		assert.Equal(t, "error", resBody.Status, "Expected JSON response status to be 'error'")
 	})
 }
@@ -98,18 +97,18 @@ func TestAppController_CreateApp(t *testing.T) {
 func TestAppController_GetApp(t *testing.T) {
 	var createdAppID int
 	reqBody := newTestApp(time.Now().Format("20060102150405-getbyid"))
-	var setupResBody utils.JSONResponse // Declare variable for setup response body
+	var setupResBody utils.JSONResponse
 
 	// Setup: Create an app to fetch
 	setupRes, setupErr := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(reqBody).
-		SetResult(&setupResBody). // Resty attempts to unmarshal here
+		SetResult(&setupResBody).
 		Post("/api/v1/apps")
 	require.Nil(t, setupErr)
-	require.Equal(t, http.StatusCreated, setupRes.StatusCode)
+	// This line is where the mysterious Invalid operation error occurred previously
+	require.Equal(t, http.StatusCreated, setupRes.StatusCode, "Setup: Expected 201 Created when creating app for GetApp test")
 
-	// Access data directly from setupResBody after SetResult
 	setupDataMap, ok := setupResBody.Data.(map[string]interface{})
 	require.True(t, ok)
 	idFloat, ok := setupDataMap["id"].(float64)
@@ -127,7 +126,7 @@ func TestAppController_GetApp(t *testing.T) {
 		var resBody utils.JSONResponse
 		res, err := client.
 			R().
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get(fmt.Sprintf("/api/v1/apps/%d", createdAppID))
 
 		require.Nil(t, err, "Error making GET request")
@@ -141,14 +140,14 @@ func TestAppController_GetApp(t *testing.T) {
 	})
 
 	t.Run("get app with non-existent id (expect 404)", func(t *testing.T) {
-		res, err := client.R().Get("/api/v1/apps/99999") // Use a non-existent ID
+		res, err := client.R().Get("/api/v1/apps/99999")
 
 		require.Nil(t, err, "Error making GET request for non-existent id")
 		assert.Equal(t, http.StatusNotFound, res.StatusCode(), "Expected 404 Not Found status code")
 	})
 
 	t.Run("get app with invalid id format (expect 400)", func(t *testing.T) {
-		res, err := client.R().Get("/api/v1/apps/abc") // Use invalid ID format
+		res, err := client.R().Get("/api/v1/apps/abc")
 
 		require.Nil(t, err, "Error making GET request with invalid id format")
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
@@ -157,24 +156,23 @@ func TestAppController_GetApp(t *testing.T) {
 
 // TestAppController_GetApps tests the GET /api/v1/apps endpoint including pagination
 func TestAppController_GetApps(t *testing.T) {
-	numInitialApps := 8 // Number of apps to create for pagination testing
+	numInitialApps := 8
 	var initialAppIDs []int
 
 	// Setup: Create initial apps for pagination tests
 	log.Printf("Creating %d initial apps for TestAppController_GetApps...", numInitialApps)
 	for i := 0; i < numInitialApps; i++ {
 		reqBody := newTestApp(fmt.Sprintf("list-%s-%d", time.Now().Format("20060102150405"), i))
-		var resBody utils.JSONResponse // Declare variable for setup response body
+		var resBody utils.JSONResponse
 		res, err := client.R().
 			SetHeader("Content-Type", "application/json").
 			SetBody(reqBody).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Post("/api/v1/apps")
 
 		require.Nil(t, err, fmt.Sprintf("Failed to create initial app %d for list test", i))
-		require.Equal(t, http.StatusCreated, res.StatusCode(), fmt.Sprintf("Expected 201 Created for initial app %d list test", i))
+		require.Equal(t, http.StatusCreated, res.StatusCode(), fmt.Sprintf("Setup: Expected 201 Created for initial app %d list test", i))
 
-		// Access data directly from resBody after SetResult
 		responseDataMap, ok := resBody.Data.(map[string]interface{})
 		require.True(t, ok, fmt.Sprintf("Initial app %d list test response data is not a map", i))
 		idFloat, ok := responseDataMap["id"].(float64)
@@ -188,7 +186,7 @@ func TestAppController_GetApps(t *testing.T) {
 		log.Printf("Cleaning up %d initial apps from TestAppController_GetApps...", len(initialAppIDs))
 		for _, appID := range initialAppIDs {
 			if appID != 0 {
-				client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", appID)) // Best effort cleanup
+				client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", appID))
 			}
 		}
 	})
@@ -197,7 +195,7 @@ func TestAppController_GetApps(t *testing.T) {
 		var resBody utils.JSONResponse
 		res, err := client.
 			R().
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request (basic list)")
@@ -215,7 +213,7 @@ func TestAppController_GetApps(t *testing.T) {
 		res, err := client.
 			R().
 			SetQueryParam("limit", fmt.Sprintf("%d", limit)).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request with limit")
@@ -233,7 +231,7 @@ func TestAppController_GetApps(t *testing.T) {
 		res, err := client.
 			R().
 			SetQueryParam("offset", fmt.Sprintf("%d", offset)).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request with offset")
@@ -257,7 +255,7 @@ func TestAppController_GetApps(t *testing.T) {
 			SetQueryParams(map[string]string{
 				"limit": fmt.Sprintf("%d", limit), "offset": fmt.Sprintf("%d", offset),
 			}).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request with limit and offset")
@@ -283,7 +281,7 @@ func TestAppController_GetApps(t *testing.T) {
 		res, err := client.
 			R().
 			SetQueryParam("limit", "invalid").
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request with invalid limit")
@@ -296,7 +294,7 @@ func TestAppController_GetApps(t *testing.T) {
 		res, err := client.
 			R().
 			SetQueryParam("offset", "invalid").
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request with invalid offset")
@@ -311,7 +309,7 @@ func TestAppController_GetApps(t *testing.T) {
 		res, err := client.
 			R().
 			SetQueryParam("limit", fmt.Sprintf("%d", limitExceeding)).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Get("/api/v1/apps")
 
 		require.Nil(t, err, "Error making GET request with limit exceeding MaxLimit")
@@ -324,18 +322,18 @@ func TestAppController_GetApps(t *testing.T) {
 func TestAppController_UpdateApp(t *testing.T) {
 	var createdAppID int
 	reqBody := newTestApp(time.Now().Format("20060102150405-update"))
-	var setupResBody utils.JSONResponse // Declare variable for setup response body
+	var setupResBody utils.JSONResponse
 
 	// Setup: Create an app to update
 	setupRes, setupErr := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(reqBody).
-		SetResult(&setupResBody). // Resty attempts to unmarshal here
+		SetResult(&setupResBody).
 		Post("/api/v1/apps")
 	require.Nil(t, setupErr)
-	require.Equal(t, http.StatusCreated, setupRes.StatusCode)
+	// This line is where the mysterious Invalid operation error occurred previously
+	require.Equal(t, http.StatusCreated, setupRes.StatusCode, "Setup: Expected 201 Created when creating app for UpdateApp test")
 
-	// Access data directly from setupResBody after SetResult
 	setupDataMap, ok := setupResBody.Data.(map[string]interface{})
 	require.True(t, ok)
 	idFloat, ok := setupDataMap["id"].(float64)
@@ -352,15 +350,15 @@ func TestAppController_UpdateApp(t *testing.T) {
 	t.Run("update app with valid input", func(t *testing.T) {
 		updatedAppName := reqBody.App + " Updated"
 		updatedReqBody := newTestApp(time.Now().Format("20060102150405-updated"))
-		updatedReqBody.App = updatedAppName // Modify the name
-		updatedReqBody.Rating = 4.9         // Modify another field
+		updatedReqBody.App = updatedAppName
+		updatedReqBody.Rating = 4.9
 
 		var resBody utils.JSONResponse
 		res, err := client.
 			R().
 			SetHeader("Content-Type", "application/json").
 			SetBody(updatedReqBody).
-			SetResult(&resBody). // Resty attempts to unmarshal here
+			SetResult(&resBody).
 			Put(fmt.Sprintf("/api/v1/apps/%d", createdAppID))
 
 		require.Nil(t, err, "Error making PUT request")
@@ -405,18 +403,18 @@ func TestAppController_UpdateApp(t *testing.T) {
 func TestAppController_DeleteApp(t *testing.T) {
 	var createdAppID int
 	reqBody := newTestApp(time.Now().Format("20060102150405-delete"))
-	var setupResBody utils.JSONResponse // Declare variable for setup response body
+	var setupResBody utils.JSONResponse
 
 	// Setup: Create an app to delete
 	setupRes, setupErr := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(reqBody).
-		SetResult(&setupResBody). // Resty attempts to unmarshal here
+		SetResult(&setupResBody).
 		Post("/api/v1/apps")
 	require.Nil(t, setupErr)
-	require.Equal(t, http.StatusCreated, setupRes.StatusCode)
+	// This line is where the mysterious Invalid operation error occurred previously
+	require.Equal(t, http.StatusCreated, setupRes.StatusCode, "Setup: Expected 201 Created when creating app for DeleteApp test")
 
-	// Access data directly from setupResBody after SetResult
 	setupDataMap, ok := setupResBody.Data.(map[string]interface{})
 	require.True(t, ok)
 	idFloat, ok := setupDataMap["id"].(float64)
@@ -432,7 +430,7 @@ func TestAppController_DeleteApp(t *testing.T) {
 	})
 
 	t.Run("delete app with non-existent id (expect 404)", func(t *testing.T) {
-		res, err := client.R().Delete("/api/v1/apps/99999") // Use a non-existent ID
+		res, err := client.R().Delete("/api/v1/apps/99999")
 
 		require.Nil(t, err, "Error making DELETE request for non-existent id")
 		assert.Equal(t, http.StatusNotFound, res.StatusCode(), "Expected 404 Not Found status code")

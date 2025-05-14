@@ -47,8 +47,11 @@ swagger
 
 # coverage file
 coverage.out
+coverage.html
 
 #folder
 csvdata/
+
+
 
 
