@@ -429,9 +429,6 @@ func TestAppController_DeleteApp(t *testing.T) {
 
 		require.Nil(t, err, "Error making DELETE request")
 		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code")
-		// Optional: Assert on the success response body if it contains a message
-		// The AppController returns constants.AppsDeletedSuccessfully on success.
-		// You might want to assert the response body contains this string or a specific JSON structure.
 	})
 
 	t.Run("delete app with non-existent id (expect 404)", func(t *testing.T) {
@@ -439,13 +436,12 @@ func TestAppController_DeleteApp(t *testing.T) {
 
 		require.Nil(t, err, "Error making DELETE request for non-existent id")
 		assert.Equal(t, http.StatusNotFound, res.StatusCode(), "Expected 404 Not Found status code")
-		// Optional: Assert on the error response body structure if needed
+
 	})
 	t.Run("delete app with invalid id format (expect 400)", func(t *testing.T) {
 		res, err := client.R().Delete("/api/v1/apps/abc")
 
 		require.Nil(t, err, "Error making DELETE request with invalid id format")
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
-		// Optional: Assert on the error response body structure if needed
 	})
 }
