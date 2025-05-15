@@ -194,3 +194,70 @@ func TestGetReviews(t *testing.T) {
 		assert.Nil(t, err)
 	})
 }
+func TestUpdateReview(t *testing.T) {
+	// Step 1: Create a review to update
+	setupReview := map[string]interface{}{
+		"app":                    "TestAppUpdate",
+		"translated_review":      "Initial review text",
+		"sentiment":              "Neutral",
+		"sentiment_polarity":     map[string]interface{}{"value": 0.0, "valid": true},
+		"sentiment_subjectivity": map[string]interface{}{"value": 0.5, "valid": true},
+	}
+
+	resCreate, err := client.
+		R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(setupReview).
+		Post("/api/v1/reviews")
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusCreated, resCreate.StatusCode())
+
+	var created map[string]interface{}
+	_ = json.Unmarshal(resCreate.Body(), &created)
+	reviewID := int(created["id"].(float64))
+
+	t.Run("update review with valid data", func(t *testing.T) {
+		updateBody := map[string]interface{}{
+			"app":                    "TestAppUpdate",
+			"translated_review":      "Updated review text",
+			"sentiment":              "Positive",
+			"sentiment_polarity":     0.7,
+			"sentiment_subjectivity": 0.9,
+		}
+
+		res, err := client.
+			R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(updateBody).
+			Put(fmt.Sprintf("/api/v1/reviews/%d", reviewID))
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
+	})
+
+	t.Run("update review with invalid ID", func(t *testing.T) {
+		updateBody := map[string]interface{}{
+			"app":                    "InvalidUpdate",
+			"translated_review":      "Bad update",
+			"sentiment":              "Neutral",
+			"sentiment_polarity":     0.0,
+			"sentiment_subjectivity": 0.5,
+		}
+
+		res, err := client.
+			R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(updateBody).
+			Put("/api/v1/reviews/999999")
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode())
+	})
+
+	// Cleanup
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM reviews WHERE app = 'TestAppUpdate'")
+		assert.Nil(t, err)
+	})
+}
