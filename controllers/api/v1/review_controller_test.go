@@ -1,6 +1,7 @@
 package v1_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -76,6 +77,59 @@ func TestCreateReview(t *testing.T) {
 	})
 	t.Cleanup(func() {
 		_, err := db.Exec(`DELETE FROM reviews WHERE app IN (?, ?)`, "Test App Name update", "EdgeApp")
+		assert.Nil(t, err)
+	})
+}
+func TestGetReviewByID(t *testing.T) {
+	var insertedID int
+
+	// First create a review to retrieve
+	t.Run("create review for fetching", func(t *testing.T) {
+		req := structs.ReqCreateReview{
+			App:                   "Test App For GetByID",
+			TranslatedReview:      "This is a test review for get by id",
+			Sentiment:             "positive",
+			SentimentPolarity:     structs.NullableFloat64{Float64: 0.7, Valid: true},
+			SentimentSubjectivity: structs.NullableFloat64{Float64: 0.6, Valid: true},
+		}
+
+		res, err := client.
+			R().
+			SetBody(req).
+			SetResult(&structs.Review{}).
+			Post("/api/v1/reviews")
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusCreated, res.StatusCode())
+
+		createdReview := res.Result().(*structs.Review)
+		insertedID = createdReview.ReviewID
+	})
+
+	// Test Case: Get review by valid ID
+	t.Run("get review by valid id", func(t *testing.T) {
+		res, err := client.
+			R().
+			SetResult(&structs.Review{}).
+			Get(fmt.Sprintf("/api/v1/reviews/1", insertedID))
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
+	})
+
+	// Test Case: Get review by invalid ID
+	t.Run("get review by invalid id", func(t *testing.T) {
+		res, err := client.
+			R().
+			Get("/api/v1/reviews/999999") // Assuming this ID doesn't exist
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode())
+	})
+
+	// Cleanup
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM reviews WHERE id = $1", insertedID)
 		assert.Nil(t, err)
 	})
 }
