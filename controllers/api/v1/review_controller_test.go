@@ -1,6 +1,7 @@
 package v1_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -111,7 +112,7 @@ func TestGetReviewByID(t *testing.T) {
 		res, err := client.
 			R().
 			SetResult(&structs.Review{}).
-			Get(fmt.Sprintf("/api/v1/reviews/1", insertedID))
+			Get(fmt.Sprintf("/api/v1/reviews/%d", insertedID))
 
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode())
@@ -130,6 +131,66 @@ func TestGetReviewByID(t *testing.T) {
 	// Cleanup
 	t.Cleanup(func() {
 		_, err := db.Exec("DELETE FROM reviews WHERE id = $1", insertedID)
+		assert.Nil(t, err)
+	})
+}
+func TestGetReviews(t *testing.T) {
+	// Setup: Create a review using POST endpoint
+	setupReview := map[string]interface{}{
+		"app":                    "TestAppGet",
+		"translated_review":      "Test fetching review",
+		"sentiment":              "Positive",
+		"sentiment_polarity":     map[string]interface{}{"value": 0.9, "valid": true},
+		"sentiment_subjectivity": map[string]interface{}{"value": 0.7, "valid": true},
+	}
+
+	resCreate, err := client.
+		R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(setupReview).
+		Post("/api/v1/reviews")
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusCreated, resCreate.StatusCode())
+
+	t.Run("get all reviews successfully", func(t *testing.T) {
+		res, err := client.
+			R().
+			SetHeader("Accept", "application/json").
+			Get("/api/v1/reviews")
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
+
+		var response []map[string]interface{}
+		err = json.Unmarshal(res.Body(), &response)
+		assert.Nil(t, err)
+		assert.True(t, len(response) >= 1)
+	})
+
+	t.Run("get reviews with negative limit", func(t *testing.T) {
+		res, err := client.
+			R().
+			SetQueryParam("limit", "-10").
+			Get("/api/v1/reviews")
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
+	})
+
+	t.Run("get reviews with invalid limit format", func(t *testing.T) {
+		res, err := client.
+			R().
+			SetQueryParam("limit", "abc").
+			Get("/api/v1/reviews")
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
+	})
+
+	// Cleanup
+	t.Cleanup(func() {
+		_, err := db.Exec("DELETE FROM reviews WHERE app = 'TestAppGet'")
 		assert.Nil(t, err)
 	})
 }
