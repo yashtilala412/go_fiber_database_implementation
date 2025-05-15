@@ -261,3 +261,47 @@ func TestUpdateReview(t *testing.T) {
 		assert.Nil(t, err)
 	})
 }
+func TestDeleteReview(t *testing.T) {
+	// Step 1: Create review first using helper
+	body := map[string]interface{}{
+		"app":                    "TestAppDelete",
+		"translated_review":      "This is a test delete review",
+		"sentiment":              "neutral",
+		"sentiment_polarity":     map[string]interface{}{"value": 0.3, "valid": true},
+		"sentiment_subjectivity": map[string]interface{}{"value": 0.6, "valid": true},
+	}
+
+	resCreate, err := client.
+		R().
+		SetBody(body).
+		SetHeader("Content-Type", "application/json").
+		Post("/api/v1/reviews")
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusCreated, resCreate.StatusCode())
+
+	// Extract ID
+	var created map[string]interface{}
+	_ = json.Unmarshal(resCreate.Body(), &created)
+	reviewID := int(created["id"].(float64))
+
+	// Step 2: Delete the review
+	t.Run("delete review with valid ID", func(t *testing.T) {
+		res, err := client.
+			R().
+			Delete(fmt.Sprintf("/api/v1/reviews/%d", reviewID))
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
+	})
+
+	// Step 3: Try deleting again (should fail)
+	t.Run("delete review with non-existent ID", func(t *testing.T) {
+		res, err := client.
+			R().
+			Delete(fmt.Sprintf("/api/v1/reviews/%d", reviewID))
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode())
+	})
+}
