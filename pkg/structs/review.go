@@ -17,16 +17,6 @@ type Review struct {
 	SentimentSubjectivity NullableFloat64 `json:"sentiment_subjectivity" db:"sentiment_subjectivity"`
 }
 
-// ReqCreateReview defines the request body for creating a review
-type ReqCreateReview struct {
-	ReviewID              int             `json:"id" db:"id"`
-	App                   string          `json:"app" db:"app" validate:"required"`
-	TranslatedReview      string          `json:"translated_review" db:"translated_review" validate:"required"`
-	Sentiment             string          `json:"sentiment" db:"sentiment" validate:"required"`
-	SentimentPolarity     NullableFloat64 `json:"sentiment_polarity" db:"sentiment_polarity"`
-	SentimentSubjectivity NullableFloat64 `json:"sentiment_subjectivity" db:"sentiment_subjectivity"`
-}
-
 // NullableFloat64 is a custom type that handles nullable float64 values
 type NullableFloat64 struct {
 	Float64 float64 `json:"value" swaggertype:"primitive,number"`
