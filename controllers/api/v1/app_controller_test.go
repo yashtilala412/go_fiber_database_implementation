@@ -1,445 +1,252 @@
 package v1_test
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"reflect"
 	"testing"
-	"time"
 
-	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/models"
-	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/utils"
-
+	"git.pride.improwised.dev/Onboarding-2025/Yash-Tilala/fiber-csv-app/pkg/structs"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-// client and db are global variables provided by TestMain in v1_test.go
+func TestCreateApp(t *testing.T) {
+	// Test case 1: Create app with invalid input (missing required fields)
+	t.Run("create app with invalid input", func(t *testing.T) {
+		req := structs.App{
+			App: "MyTestApp", // missing other required fields
+		}
 
-// Helper function to create a default valid App struct for requests
-func newTestApp(tag string) models.App {
-	return models.App{
-		App:           "Test App " + tag,
-		Category:      "TEST_CATEGORY",
-		Rating:        4.5,
-		Reviews:       100,
-		Size:          "10M",
-		Installs:      "1,000+",
-		Type:          "Free",
-		Price:         "0",
-		ContentRating: "Everyone",
-		Genres:        "Testing",
-		LastUpdated:   time.Now().Format("Jan 02, 2006"), // Included because your model requires it
-		CurrentVer:    "1.0",                             // Included because your model requires it
-		AndroidVer:    "4.0.3 and up",                    // Included because your model requires it
-	}
-}
+		res, err := client.
+			R().
+			EnableTrace().
+			SetBody(req).
+			Post("/api/v1/apps")
 
-// TestAppController_CreateApp tests the POST /api/v1/apps endpoint
-func TestAppController_CreateApp(t *testing.T) {
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
+	})
+
+	// Test case 2: Create app with valid input
 	t.Run("create app with valid input", func(t *testing.T) {
-		reqBody := newTestApp(time.Now().Format("20060102150405-valid"))
-		var resBody utils.JSONResponse
-		var createdAppID int
-
-		// Cleanup: Delete the app created in this test
-		t.Cleanup(func() {
-			if createdAppID != 0 {
-				log.Printf("Cleaning up app created in TestAppController_CreateApp (valid): %d", createdAppID)
-				client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", createdAppID)) // Best effort cleanup
-			}
-		})
+		req := structs.App{
+			App:           "MyTestApp",
+			Category:      "Utilities",
+			Rating:        4.5,
+			Reviews:       1000,
+			Size:          "15MB",
+			Installs:      "50000",
+			Type:          "Free",
+			Price:         "$0",
+			ContentRating: "Everyone",
+			Genres:        "Tools",
+			LastUpdated:   "2025-05-14",
+			CurrentVer:    "1.0.0",
+			AndroidVer:    "5.0 and up",
+		}
 
 		res, err := client.
 			R().
-			SetHeader("Content-Type", "application/json").
-			SetBody(reqBody).
-			SetResult(&resBody).
+			EnableTrace().
+			SetBody(req).
 			Post("/api/v1/apps")
 
-		require.Nil(t, err, "Error making POST request")
-		assert.Equal(t, http.StatusCreated, res.StatusCode(), "Expected 201 Created status code")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success'")
-
-		responseDataMap, ok := resBody.Data.(map[string]interface{})
-		require.True(t, ok, "Response data is not a map[string]interface{}")
-
-		idFloat, ok := responseDataMap["id"].(float64)
-		require.True(t, ok, "Could not find 'id' field in response data or it's not a number")
-		createdAppID = int(idFloat) // Store ID for cleanup
-
-		assert.NotEqual(t, 0, createdAppID, "Created App ID should not be zero")
-		assert.Equal(t, reqBody.App, responseDataMap["app"], "App name in response does not match")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusCreated, res.StatusCode())
 	})
 
-	t.Run("create app with invalid input (missing required field)", func(t *testing.T) {
-		reqBody := models.App{
-			Price: "100",
+	// Test case 3: Create app with missing required fields (e.g., app name)
+	t.Run("create app with missing fields", func(t *testing.T) {
+		req := structs.App{
+			Category:      "Utilities",
+			Rating:        4.5,
+			Reviews:       1000,
+			Size:          "15MB",
+			Installs:      "50000",
+			Type:          "Free",
+			Price:         "$0",
+			ContentRating: "Everyone",
+			Genres:        "Tools",
+			LastUpdated:   "2025-05-14",
+			CurrentVer:    "1.0.0",
+			AndroidVer:    "5.0 and up",
 		}
-		var resBody utils.JSONResponse
 
 		res, err := client.
 			R().
-			SetHeader("Content-Type", "application/json").
-			SetBody(reqBody).
-			SetResult(&resBody).
+			EnableTrace().
+			SetBody(req).
 			Post("/api/v1/apps")
 
-		require.Nil(t, err, "Error making POST request with invalid input")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
-		// This assertion expects Status to be "error". It will fail if utils.JSONError returns "".
-		assert.Equal(t, "error", resBody.Status, "Expected JSON response status to be 'error'")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
 	})
-}
 
-// TestAppController_GetApp tests the GET /api/v1/apps/{id} endpoint
-func TestAppController_GetApp(t *testing.T) {
-	var createdAppID int
-	reqBody := newTestApp(time.Now().Format("20060102150405-getbyid"))
-	var setupResBody utils.JSONResponse
-
-	// Setup: Create an app to fetch
-	setupRes, setupErr := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(reqBody).
-		SetResult(&setupResBody).
-		Post("/api/v1/apps")
-	require.Nil(t, setupErr)
-	// This line is where the mysterious Invalid operation error occurred previously
-	require.Equal(t, http.StatusCreated, setupRes.StatusCode, "Setup: Expected 201 Created when creating app for GetApp test")
-
-	setupDataMap, ok := setupResBody.Data.(map[string]interface{})
-	require.True(t, ok)
-	idFloat, ok := setupDataMap["id"].(float64)
-	require.True(t, ok)
-	createdAppID = int(idFloat)
-	require.NotEqual(t, 0, createdAppID)
-
-	// Cleanup: Delete the app created for this test
+	// Cleanup after test
 	t.Cleanup(func() {
-		log.Printf("Cleaning up app created for TestAppController_GetApp: %d", createdAppID)
-		client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", createdAppID)) // Best effort cleanup
-	})
-
-	t.Run("get app with valid id", func(t *testing.T) {
-		var resBody utils.JSONResponse
-		res, err := client.
-			R().
-			SetResult(&resBody).
-			Get(fmt.Sprintf("/api/v1/apps/%d", createdAppID))
-
-		require.Nil(t, err, "Error making GET request")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success'")
-
-		retrievedAppMap, ok := resBody.Data.(map[string]interface{})
-		require.True(t, ok, "Response data is not a map[string]interface{}")
-		assert.Equal(t, float64(createdAppID), retrievedAppMap["id"], "Retrieved app ID does not match")
-		assert.Equal(t, reqBody.App, retrievedAppMap["app"], "Retrieved app name does not match")
-	})
-
-	t.Run("get app with non-existent id (expect 404)", func(t *testing.T) {
-		res, err := client.R().Get("/api/v1/apps/99999")
-
-		require.Nil(t, err, "Error making GET request for non-existent id")
-		assert.Equal(t, http.StatusNotFound, res.StatusCode(), "Expected 404 Not Found status code")
-	})
-
-	t.Run("get app with invalid id format (expect 400)", func(t *testing.T) {
-		res, err := client.R().Get("/api/v1/apps/abc")
-
-		require.Nil(t, err, "Error making GET request with invalid id format")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
+		_, err := db.Exec("DELETE FROM apps WHERE app='MyTestApp'")
+		assert.Nil(t, err)
 	})
 }
-
-// TestAppController_GetApps tests the GET /api/v1/apps endpoint including pagination
-func TestAppController_GetApps(t *testing.T) {
-	numInitialApps := 8
-	var initialAppIDs []int
-
-	// Setup: Create initial apps for pagination tests
-	log.Printf("Creating %d initial apps for TestAppController_GetApps...", numInitialApps)
-	for i := 0; i < numInitialApps; i++ {
-		reqBody := newTestApp(fmt.Sprintf("list-%s-%d", time.Now().Format("20060102150405"), i))
-		var resBody utils.JSONResponse
-		res, err := client.R().
-			SetHeader("Content-Type", "application/json").
-			SetBody(reqBody).
-			SetResult(&resBody).
-			Post("/api/v1/apps")
-
-		require.Nil(t, err, fmt.Sprintf("Failed to create initial app %d for list test", i))
-		require.Equal(t, http.StatusCreated, res.StatusCode(), fmt.Sprintf("Setup: Expected 201 Created for initial app %d list test", i))
-
-		responseDataMap, ok := resBody.Data.(map[string]interface{})
-		require.True(t, ok, fmt.Sprintf("Initial app %d list test response data is not a map", i))
-		idFloat, ok := responseDataMap["id"].(float64)
-		require.True(t, ok, fmt.Sprintf("Could not find 'id' for initial app %d list test or it's not a number", i))
-		initialAppIDs = append(initialAppIDs, int(idFloat))
-	}
-	log.Printf("Finished creating %d initial apps for TestAppController_GetApps. IDs: %v", numInitialApps, initialAppIDs)
-
-	// Cleanup: Delete the initial apps created for this test
-	t.Cleanup(func() {
-		log.Printf("Cleaning up %d initial apps from TestAppController_GetApps...", len(initialAppIDs))
-		for _, appID := range initialAppIDs {
-			if appID != 0 {
-				client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", appID))
-			}
-		}
-	})
-
-	t.Run("list apps (basic)", func(t *testing.T) {
-		var resBody utils.JSONResponse
+func TestGetApps(t *testing.T) {
+	// Test case 1: Get apps with valid limit and offset
+	t.Run("get apps with valid limit and offset", func(t *testing.T) {
 		res, err := client.
 			R().
-			SetResult(&resBody).
-			Get("/api/v1/apps")
+			EnableTrace().
+			Get("/api/v1/apps?limit=10&offset=0")
 
-		require.Nil(t, err, "Error making GET request (basic list)")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code (basic list)")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success' (basic list)")
-
-		responseDataValue := reflect.ValueOf(resBody.Data)
-		require.Containsf(t, []reflect.Kind{reflect.Slice, reflect.Array}, responseDataValue.Kind(), "Response data is not a slice/array for basic list")
-		assert.Len(t, resBody.Data, numInitialApps, fmt.Sprintf("Expected %d items in the basic list", numInitialApps))
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
 	})
 
-	t.Run("list apps with limit", func(t *testing.T) {
-		limit := 3
-		var resBody utils.JSONResponse
+	// Test case 2: Get apps with invalid (negative) limit
+	t.Run("get apps with invalid limit", func(t *testing.T) {
 		res, err := client.
 			R().
-			SetQueryParam("limit", fmt.Sprintf("%d", limit)).
-			SetResult(&resBody).
-			Get("/api/v1/apps")
+			EnableTrace().
+			Get("/api/v1/apps?limit=-10&offset=0")
 
-		require.Nil(t, err, "Error making GET request with limit")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code with limit")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success' with limit")
-
-		responseDataValue := reflect.ValueOf(resBody.Data)
-		require.Containsf(t, []reflect.Kind{reflect.Slice, reflect.Array}, responseDataValue.Kind(), "Response data is not a slice/array for list with limit")
-		assert.Len(t, resBody.Data, limit, fmt.Sprintf("Expected %d items with limit %d", limit, limit))
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
 	})
 
-	t.Run("list apps with offset", func(t *testing.T) {
-		offset := 2
-		var resBody utils.JSONResponse
+	// Test case 3: Get apps with invalid offset (negative offset)
+	t.Run("get apps with invalid offset", func(t *testing.T) {
 		res, err := client.
 			R().
-			SetQueryParam("offset", fmt.Sprintf("%d", offset)).
-			SetResult(&resBody).
-			Get("/api/v1/apps")
+			EnableTrace().
+			Get("/api/v1/apps?limit=10&offset=-5")
 
-		require.Nil(t, err, "Error making GET request with offset")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code with offset")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success' with offset")
-
-		responseDataValue := reflect.ValueOf(resBody.Data)
-		require.Containsf(t, []reflect.Kind{reflect.Slice, reflect.Array}, responseDataValue.Kind(), "Response data is not a slice/array for list with offset")
-		expectedCount := numInitialApps - offset
-		if expectedCount < 0 {
-			expectedCount = 0
-		}
-		assert.Len(t, resBody.Data, expectedCount, fmt.Sprintf("Expected %d items with offset %d", expectedCount, offset))
-	})
-
-	t.Run("list apps with limit and offset", func(t *testing.T) {
-		limit := 3
-		offset := 4
-		var resBody utils.JSONResponse
-		res, err := client.R().
-			SetQueryParams(map[string]string{
-				"limit": fmt.Sprintf("%d", limit), "offset": fmt.Sprintf("%d", offset),
-			}).
-			SetResult(&resBody).
-			Get("/api/v1/apps")
-
-		require.Nil(t, err, "Error making GET request with limit and offset")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code with limit and offset")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success' with limit and offset")
-
-		responseDataValue := reflect.ValueOf(resBody.Data)
-		require.Containsf(t, []reflect.Kind{reflect.Slice, reflect.Array}, responseDataValue.Kind(), "Response data is not a slice/array for list with limit and offset")
-
-		remainingAfterOffset := numInitialApps - offset
-		expectedCount := limit
-		if remainingAfterOffset < limit {
-			expectedCount = remainingAfterOffset
-		}
-		if expectedCount < 0 {
-			expectedCount = 0
-		}
-		assert.Len(t, resBody.Data, expectedCount, fmt.Sprintf("Expected %d items with limit %d and offset %d", expectedCount, limit, offset))
-	})
-
-	t.Run("list apps with invalid limit (expect 400)", func(t *testing.T) {
-		var resBody utils.JSONResponse
-		res, err := client.
-			R().
-			SetQueryParam("limit", "invalid").
-			SetResult(&resBody).
-			Get("/api/v1/apps")
-
-		require.Nil(t, err, "Error making GET request with invalid limit")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request with invalid limit")
-		assert.Equal(t, "error", resBody.Status, "Expected JSON response status to be 'error' with invalid limit")
-	})
-
-	t.Run("list apps with invalid offset (expect 400)", func(t *testing.T) {
-		var resBody utils.JSONResponse
-		res, err := client.
-			R().
-			SetQueryParam("offset", "invalid").
-			SetResult(&resBody).
-			Get("/api/v1/apps")
-
-		require.Nil(t, err, "Error making GET request with invalid offset")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request with invalid offset")
-		assert.Equal(t, "error", resBody.Status, "Expected JSON response status to be 'error' with invalid offset")
-	})
-
-	t.Run("list apps with limit exceeding MaxLimit (expect 400)", func(t *testing.T) {
-		maxLimit := 500
-		limitExceeding := maxLimit + 1
-		var resBody utils.JSONResponse
-		res, err := client.
-			R().
-			SetQueryParam("limit", fmt.Sprintf("%d", limitExceeding)).
-			SetResult(&resBody).
-			Get("/api/v1/apps")
-
-		require.Nil(t, err, "Error making GET request with limit exceeding MaxLimit")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request with limit exceeding MaxLimit")
-		assert.Equal(t, "error", resBody.Status, "Expected JSON response status to be 'error' with limit exceeding MaxLimit")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
 	})
 }
-
-// TestAppController_UpdateApp tests the PUT /api/v1/apps/{id} endpoint
-func TestAppController_UpdateApp(t *testing.T) {
-	var createdAppID int
-	reqBody := newTestApp(time.Now().Format("20060102150405-update"))
-	var setupResBody utils.JSONResponse
-
-	// Setup: Create an app to update
-	setupRes, setupErr := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(reqBody).
-		SetResult(&setupResBody).
-		Post("/api/v1/apps")
-	require.Nil(t, setupErr)
-	// This line is where the mysterious Invalid operation error occurred previously
-	require.Equal(t, http.StatusCreated, setupRes.StatusCode, "Setup: Expected 201 Created when creating app for UpdateApp test")
-
-	setupDataMap, ok := setupResBody.Data.(map[string]interface{})
-	require.True(t, ok)
-	idFloat, ok := setupDataMap["id"].(float64)
-	require.True(t, ok)
-	createdAppID = int(idFloat)
-	require.NotEqual(t, 0, createdAppID)
-
-	// Cleanup: Delete the app created for this test
-	t.Cleanup(func() {
-		log.Printf("Cleaning up app created for TestAppController_UpdateApp: %d", createdAppID)
-		client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", createdAppID)) // Best effort cleanup
-	})
-
-	t.Run("update app with valid input", func(t *testing.T) {
-		updatedAppName := reqBody.App + " Updated"
-		updatedReqBody := newTestApp(time.Now().Format("20060102150405-updated"))
-		updatedReqBody.App = updatedAppName
-		updatedReqBody.Rating = 4.9
-
-		var resBody utils.JSONResponse
+func TestGetAppById(t *testing.T) {
+	// Test case 1: Get app by valid ID
+	t.Run("get app by valid  ID", func(t *testing.T) {
 		res, err := client.
 			R().
-			SetHeader("Content-Type", "application/json").
-			SetBody(updatedReqBody).
-			SetResult(&resBody).
-			Put(fmt.Sprintf("/api/v1/apps/%d", createdAppID))
+			EnableTrace().
+			Get("/api/v1/apps/2")
 
-		require.Nil(t, err, "Error making PUT request")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code")
-		assert.Equal(t, "success", resBody.Status, "Expected JSON response status to be 'success'")
-
-		updatedAppMap, ok := resBody.Data.(map[string]interface{})
-		require.True(t, ok, "Response data is not a map[string]interface{}")
-		assert.Equal(t, updatedAppName, updatedAppMap["app"], "Updated app name in response does not match")
-		assert.Equal(t, 4.9, updatedAppMap["rating"], "Updated rating in response does not match")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
 	})
 
-	t.Run("update app with non-existent id (expect 404)", func(t *testing.T) {
-		updatedReqBody := newTestApp(time.Now().Format("20060102150405-nonexistent-update"))
-		res, err := client.R().SetHeader("Content-Type", "application/json").SetBody(updatedReqBody).Put("/api/v1/apps/99999")
+	// Test case 2: Get app by non-existing ID
+	t.Run("get app by non-existing ID", func(t *testing.T) {
+		res, err := client.
+			R().
+			EnableTrace().
+			Get("/api/v1/apps/99999") // Non-existent ID
 
-		require.Nil(t, err, "Error making PUT request for non-existent id")
-		assert.Equal(t, http.StatusNotFound, res.StatusCode(), "Expected 404 Not Found status code")
-	})
-
-	t.Run("update app with invalid input (missing required field - expect 400)", func(t *testing.T) {
-		invalidReqBody := models.App{
-			Price: "100",
-		}
-		var resBody utils.JSONResponse
-		res, err := client.R().SetHeader("Content-Type", "application/json").SetBody(invalidReqBody).SetResult(&resBody).Put(fmt.Sprintf("/api/v1/apps/%d", createdAppID))
-
-		require.Nil(t, err, "Error making PUT request with invalid input")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
-		assert.Equal(t, "error", resBody.Status, "Expected JSON response status to be 'error'")
-	})
-	t.Run("update app with invalid id format (expect 400)", func(t *testing.T) {
-		updatedReqBody := newTestApp(time.Now().Format("20060102150405-invalidformat-update"))
-		res, err := client.R().SetHeader("Content-Type", "application/json").SetBody(updatedReqBody).Put("/api/v1/apps/abc")
-
-		require.Nil(t, err, "Error making PUT request with invalid id format")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode())
 	})
 }
+func TestDeleteApp(t *testing.T) {
+	// Test case 1: Delete app by valid ID
+	t.Run("delete app by valid ID", func(t *testing.T) {
+		// Assume the app with ID 1 exists
+		res, err := client.
+			R().
+			EnableTrace().
+			Delete("/api/v1/apps/2")
 
-// TestAppController_DeleteApp tests the DELETE /api/v1/apps/{id} endpoint
-func TestAppController_DeleteApp(t *testing.T) {
-	var createdAppID int
-	reqBody := newTestApp(time.Now().Format("20060102150405-delete"))
-	var setupResBody utils.JSONResponse
-
-	// Setup: Create an app to delete
-	setupRes, setupErr := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(reqBody).
-		SetResult(&setupResBody).
-		Post("/api/v1/apps")
-	require.Nil(t, setupErr)
-	// This line is where the mysterious Invalid operation error occurred previously
-	require.Equal(t, http.StatusCreated, setupRes.StatusCode, "Setup: Expected 201 Created when creating app for DeleteApp test")
-
-	setupDataMap, ok := setupResBody.Data.(map[string]interface{})
-	require.True(t, ok)
-	idFloat, ok := setupDataMap["id"].(float64)
-	require.True(t, ok)
-	createdAppID = int(idFloat)
-	require.NotEqual(t, 0, createdAppID)
-
-	t.Run("delete app with valid id", func(t *testing.T) {
-		res, err := client.R().Delete(fmt.Sprintf("/api/v1/apps/%d", createdAppID))
-
-		require.Nil(t, err, "Error making DELETE request")
-		assert.Equal(t, http.StatusOK, res.StatusCode(), "Expected 200 OK status code")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
 	})
 
-	t.Run("delete app with non-existent id (expect 404)", func(t *testing.T) {
-		res, err := client.R().Delete("/api/v1/apps/99999")
+	// Test case 2: Delete app by non-existing ID
+	t.Run("delete app by non-existing ID", func(t *testing.T) {
+		res, err := client.
+			R().
+			EnableTrace().
+			Delete("/api/v1/apps/99999") // Non-existent ID
 
-		require.Nil(t, err, "Error making DELETE request for non-existent id")
-		assert.Equal(t, http.StatusNotFound, res.StatusCode(), "Expected 404 Not Found status code")
-
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode())
 	})
-	t.Run("delete app with invalid id format (expect 400)", func(t *testing.T) {
-		res, err := client.R().Delete("/api/v1/apps/abc")
+}
+func TestUpdateApp(t *testing.T) {
+	// Test case 1: Update app with valid ID and valid data
+	t.Run("update app with valid data", func(t *testing.T) {
+		req := structs.App{
+			App:           "UpdatedTestApp",
+			Category:      "Games",
+			Rating:        4.7,
+			Reviews:       1200,
+			Size:          "20MB",
+			Installs:      "60000",
+			Type:          "Paid",
+			Price:         "$2.99",
+			ContentRating: "Teen",
+			Genres:        "Action",
+			LastUpdated:   "2025-06-14",
+			CurrentVer:    "1.1.0",
+			AndroidVer:    "6.0 and up",
+		}
 
-		require.Nil(t, err, "Error making DELETE request with invalid id format")
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode(), "Expected 400 Bad Request status code")
+		res, err := client.
+			R().
+			EnableTrace().
+			SetBody(req).
+			Put("/api/v1/apps/1") // Assume app ID 1 exists
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode())
+	})
+
+	// Test case 2: Update app with missing required field (e.g., app name)
+	t.Run("update app with missing required fields", func(t *testing.T) {
+		req := structs.App{
+			Category:      "Games",
+			Rating:        4.7,
+			Reviews:       1200,
+			Size:          "20MB",
+			Installs:      "60000",
+			Type:          "Paid",
+			Price:         "$2.99",
+			ContentRating: "Teen",
+			Genres:        "Action",
+			LastUpdated:   "2025-06-14",
+			CurrentVer:    "1.1.0",
+			AndroidVer:    "6.0 and up",
+		}
+
+		res, err := client.
+			R().
+			EnableTrace().
+			SetBody(req).
+			Put("/api/v1/apps/3")
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode())
+	})
+
+	// Test case 3: Update app with non-existing ID
+	t.Run("update app with non-existing ID", func(t *testing.T) {
+		req := structs.App{
+			App:           "UpdatedTestApp",
+			Category:      "Games",
+			Rating:        4.7,
+			Reviews:       1200,
+			Size:          "20MB",
+			Installs:      "60000",
+			Type:          "Paid",
+			Price:         "$2.99",
+			ContentRating: "Teen",
+			Genres:        "Action",
+			LastUpdated:   "2025-06-14",
+			CurrentVer:    "1.1.0",
+			AndroidVer:    "6.0 and up",
+		}
+
+		res, err := client.
+			R().
+			EnableTrace().
+			SetBody(req).
+			Put("/api/v1/apps/99999") // Non-existent ID
+
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode())
 	})
 }

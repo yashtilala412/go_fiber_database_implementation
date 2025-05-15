@@ -96,7 +96,7 @@ func (ac *AppController) GetApps(c *fiber.Ctx) error {
 	}
 
 	offset, err := strconv.Atoi(c.Query("offset", strconv.Itoa(constants.DefaultOffset)))
-	if err != nil {
+	if err != nil || offset < 0 {
 		ac.logger.Error("Invalid offset parameter", zap.String("offset", c.Query("offset")), zap.Error(err))
 		return utils.JSONError(c, http.StatusBadRequest, constants.ErrorInvalidOffset)
 	}
