@@ -5,9 +5,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// JSONResponse is a generic struct to unmarshal JSend responses for testing
 type JSONResponse struct {
-	Status string      `json:"status"`
-	Data   interface{} `json:"data"`
+	Status  string      `json:"status"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+	Code    int         `json:"code"`
 }
 
 // JSONSuccess is a generic success output writer
