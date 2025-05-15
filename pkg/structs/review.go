@@ -9,7 +9,7 @@ import (
 
 // Review defines the review structure for API responses
 type Review struct {
-	ID                    int             `json:"id" db:"id"`
+	ReviewID              int             `json:"id" db:"id"`
 	App                   string          `json:"app" db:"app" validate:"required"`
 	TranslatedReview      string          `json:"translated_review" db:"translated_review" validate:"required"`
 	Sentiment             string          `json:"sentiment" db:"sentiment" validate:"required"`
@@ -19,6 +19,7 @@ type Review struct {
 
 // ReqCreateReview defines the request body for creating a review
 type ReqCreateReview struct {
+	ReviewID              int             `json:"id" db:"id"`
 	App                   string          `json:"app" db:"app" validate:"required"`
 	TranslatedReview      string          `json:"translated_review" db:"translated_review" validate:"required"`
 	Sentiment             string          `json:"sentiment" db:"sentiment" validate:"required"`
